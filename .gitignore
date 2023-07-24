@@ -6,6 +6,6 @@
 
 
 # knitr and caching stuff
-*/*_files/*
-*/*output/*
-*/*data/*
+*_files
+*output
+*data*

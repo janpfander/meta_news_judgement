@@ -1,0 +1,224 @@
+---
+title: "Cleaning raw coded data set"
+author: "Anonymous"
+date: "2023-04-27"
+output: 
+  html_document: 
+    keep_md: yes
+bibliography: bibliography.bib
+---
+
+
+```r
+library(tidyverse)
+library(sf) # for map data
+```
+
+For our analysis, some of the categories we coded are too fine grained (e.g. there is only one study that used an `accuracy_scale` of 100). Further, we sometimes were not consistent in our coding (e.g. the `country` of some studies was sometimes coded `US`, other times `United States`). In this script, we create new grouped versions of certain variables and code coherent values where needed.
+
+
+```r
+d <- read_csv("./data/data.csv")
+```
+
+### Define levels for new moderator variables
+
+
+```r
+# define news family groups
+political <- c("identity_related", "political" , "political_anti_gov", 
+               "political_pro_gov", "politically_balanced", "politically_concordant", 
+               "politically_discordant", "politically_neutral", "politically_pro-left", 
+               "politically_pro-right", "pro vs anti government")
+covid <- c("covid")
+other <- c("anything", "environment_climate",  "general", "health", "historical", 
+           "medical", "military", "economic", "mixed_health_sex_trump_nature_syria_crime",
+           "science")
+
+# define news_format groups
+title <- c("title", "title_read_out", "pitch", "title_pitch")
+title_picture <- c("title_picture", "title_picture (from real SM)", "title_picture + AUDIO")
+title_picture_pitch <- c("title_picture_pitch", "title_picture_pitch_fulltext")
+```
+
+## Recode variables and add some new ones
+
+
+```r
+# recode variables
+d <- d %>% 
+  # do some renaming to be in line with variable names used in the 
+  # simulated data and thus in the pre-registration
+  rename(mean_accuracy_fake = mean_fake_as_accurate, 
+         mean_accuracy_true = mean_true_as_accurate, 
+         sd_accuracy_fake = SD_fake_as_accurate, 
+         sd_accuracy_true = SD_true_as_accurate, 
+         n_subj = n
+  ) %>% 
+  mutate(
+    # add a unique identifier variable using `ref` and `sample_id`/`news_id`
+    ref = str_replace(ref, " ", "_"),
+    unique_sample_id = paste(ref, sampleID, sep = "_"),
+    unique_news_id = paste(ref, newsID, sep = "_"),
+    # add a numeric version of the accuracy scale variable
+    accuracy_scale_numeric = as.numeric(accuracy_scale),
+    # add `n_observations` variable
+    n_observations = n_subj*n_news,
+    # country
+    country = ifelse(country == "US", "United States", country),
+    country_grouped = ifelse(country == "United States" | country == "Europe/United States", 
+                            "US", "non-US"),
+    # news_family
+    political_concordance = case_when(news_family == "politically_concordant" ~ "concordant", 
+                                      news_family == "politically_discordant" ~ "discordant",
+                                      TRUE ~ NA_character_), 
+    news_family = tolower(news_family),
+    news_family_grouped = case_when(news_family %in% all_of(political) ~ "political", 
+                                    news_family %in% all_of(covid) ~ "covid",
+                                    news_family %in% all_of(other) ~ "other", 
+                                    TRUE ~ NA_character_),
+    # news_format
+    news_format_grouped = case_when(news_format %in% all_of(title) ~ "headline", 
+                                    news_format %in% all_of(title_picture) ~ "headline_picture",
+                                    news_format %in% all_of(title_picture_pitch) ~ "headline_picture_lede", 
+                                    TRUE ~ NA_character_),
+    # news_source
+    news_source = case_when(news_source == "source" ~ TRUE, 
+                            news_source %in% c("no_source", "nosource") ~ FALSE,
+                            TRUE ~ NA), 
+    # accuracy scale
+    accuracy_scale_grouped = ifelse(accuracy_scale %in% c("4", "binary", "6", "7"), 
+                                    accuracy_scale, "other"), 
+    # perfect symetrie
+    perfect_symetry = case_when(perfect_symetry == 1 ~ TRUE,
+                                perfect_symetry == 0 ~ FALSE,
+                                TRUE ~ NA),
+    # for multilevel models, later , we want to identify all observations
+    # (i.e. the individual effect sizes) of our data 
+    observation_id = 1:nrow(.)
+  )
+```
+
+```
+## Warning: There were 2 warnings in `mutate()`.
+## The first warning was:
+## ℹ In argument: `accuracy_scale_numeric = as.numeric(accuracy_scale)`.
+## Caused by warning:
+## ! NAs introduced by coercion
+## ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.
+```
+
+### Add map compatible names
+
+We make our country variable compatible to match map data. This involves a couple of coding decisions:
+
+-   One study says "Europe/ United States" - since we don't have more precision on where in Europe, we'll code United States.
+-   Hong Kong is not listed as a sovereign state - we'll therefore code as China.
+
+
+```r
+# Download "Admin 0 – Countries" from
+# https://www.naturalearthdata.com/downloads/110m-cultural-vectors/
+world_map <- read_sf("data/ne_110m_admin_0_countries/ne_110m_admin_0_countries.shp") %>%
+  # remove Antarctica
+  filter(ISO_A3 != "ATA")
+
+# Check which of our country names are not matched by the map data
+country_names <- world_map$ADMIN
+d %>% reframe(country = unique(country)) %>% filter(!country %in% country_names) 
+```
+
+```
+## # A tibble: 4 × 1
+##   country             
+##   <chr>               
+## 1 United States       
+## 2 UK                  
+## 3 Europe/United States
+## 4 Hong Kong
+```
+
+```r
+# # search manually for the country names
+# # this was achieved using tab completion like this:
+# country_names <- world_map %>% split(.$ADMIN)
+# country_names$`United Kingdom`
+
+# make new, map compatible country variable  
+d <- d %>% 
+  mutate(country_mapcompatible = case_when(country == "United States" ~ "United States of America",
+                                           country == "Hong Kong" ~ "China", 
+                                           country == "UK" ~ "United Kingdom",
+                                           country == "Europe/United States" ~ "United States of America",
+                                           TRUE ~ country
+                                           )
+         )
+
+# add continent variable
+d <- left_join(d, world_map %>% select(CONTINENT, ADMIN), by = c("country_mapcompatible" = "ADMIN")) %>% 
+  rename(continent = CONTINENT)
+```
+
+### Calculate Error
+
+
+```r
+# calculate `error` variable
+d <- d %>% 
+  mutate(
+    # calculate error for true news
+    error_true = ifelse(accuracy_scale == "binary", 
+                        # for binary scales, the maximum is 1
+                        1 - mean_accuracy_true, 
+                        # for continuous scales, the maximum is the value of
+                        # `accuracy_scale_numeric`
+                        accuracy_scale_numeric - mean_accuracy_true
+                        ),
+    # calculate error for fake news
+    error_fake = ifelse(
+      # For binary scales, the minimum is 0.
+      # For standardized continuous scales that reach from 0 to 1, 
+      # the minimum is also 0,
+      accuracy_scale == "binary" | accuracy_scale == "1", 
+      mean_accuracy_fake - 0,
+      # for all other continuous scales, the minimum is 1
+      mean_accuracy_fake - 1)
+  )
+```
+
+## Remove Problematic studies
+
+There are a few studies that we collected data for first, but that on second inspection do not meet our inclusion criteria.
+
+
+```r
+# # check out papers that have no (neutral) control condition
+# d %>% group_by(paperID, ref) %>% 
+#   summarize(n = sum(condition == "control")) %>% filter(n < 1) %>% 
+#   select(ref)
+```
+
+Those studies are:
+
+-   @hoesProminentMisinformationInterventions2023 (made up fake news)
+
+-   @calvilloInitialAccuracyFocus2020 (no neutral control)
+
+-   @baptistaInfluencePoliticalIdeology2021 (they use a very asymmetric scale, and results strongly favour hypotheses H2, one sample finding an effect size as large as d = 2.54 - including it seems like cheating; "According to your knowledge, how do you rate the following headline? on a 5point scale (1---not credible; 2---somehow credible; 3---quite credible; 4---credible; 5---very credible).")
+
+
+```r
+d <- d %>% 
+  # filter out problematic studies
+  filter(!ref %in% c("Hoes_2023", "Calvillo_2020", "Baptista_2021"))
+```
+
+## Write out cleaned data
+
+
+```r
+# Export data frame to CSV file with "NA" as NA representation
+write_csv(d, "data/cleaned.csv", na = "NA")
+```
+
+## References
