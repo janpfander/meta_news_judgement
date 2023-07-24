@@ -1,0 +1,11 @@
+# R stuff
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+
+# knitr and caching stuff
+*/*_files/*
+*/*output/*
+*/*data/*
