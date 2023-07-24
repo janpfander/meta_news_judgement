@@ -1,0 +1,52 @@
+---
+
+bibliography: bibliography.bib
+---
+
+# Selection bias {#selection-bias}
+
+Response bias could be an artifact of biased news selection for experiments. For example, one might suspect researchers to pick easy-to-detect false news and/or hard-to-detect true news (e.g. to avoid ceiling effects), thus inflating participants skepticism of true news.
+
+We deem this unlikely because of three reasons: First, while ceiling effects may have biased the selection of 'non-obviously true' true news, floor effects should have conversely biased the selection of 'non-obviously false' false news. There is no reason to suspect that news selection has created asymmetries between false and true news items. Researchers did sometimes pre-tested items to avoid using ambiguous headlines and ensure that participants would be able to differentiate true from false news. Yet, no article mentions asymmetries in this relatively rare selection process.
+
+Second, degrees of veracity could be captured by a Likert scales, but not by binary scales. If a selection bias is mild, i.e. leading to nuances within veracity categories but not to misclassification (e.g. people rating a true item as 5 instead of 7 on a 7-point accuracy scale, but not as a 3), collapsing responses from Likert scales to binary scales should account for it. In Appendix \@ref(binary), we show that our results hold when doing so for the subset of studies for which we have individual-level data.
+
+Third, if selection bias is driven by popularity of news, our conclusions would still hold. One could argue that selected fake news were popular, whereas true news weren't. As a result, the fake news could have been easier to classify, inflating the response bias. However, if this would have indeed inflated the response bias, it would still suggest that either (i) people know popular fake news to be fake and (ii) people tend to reject new information by default, or (iii) both.
+
+```{r}
+# calculate scaled version of Stewart et al. (2021)
+stewart <- (5.05 - 1)  / (7 - 1)
+
+# calculate scaled version of Stewart et al. (2021)
+hohenberg <- meta_wide %>% 
+  select(ref, mean_accuracy_true, sd_accuracy_true, accuracy_scale_numeric) %>% 
+  filter(ref == "Hohenberg_2023") %>% 
+  mutate(scaled_mean = (mean_accuracy_true - 1) / (accuracy_scale_numeric - 1)) %>% 
+  round_numbers()
+  
+# check effects of Luo and Hohenberg studies
+# bind_rows(
+# error_effect %>% 
+#   mutate(conf_low = yi - 1.96*sqrt(vi), 
+#          conf_high = yi + 1.96*sqrt(vi), 
+#          outcome = "error") %>% 
+#   select(ref, unique_sample_id, yi, conf_low, conf_high, outcome) %>% 
+#   filter(grepl("Luo", ref) | grepl("Hohenberg", ref)), 
+# accuracy_effect %>% 
+#   mutate(conf_low = yi - 1.96*sqrt(vi), 
+#          conf_high = yi + 1.96*sqrt(vi), 
+#          outcome = "accuracy") %>% 
+#   select(ref, unique_sample_id, yi, conf_low, conf_high, outcome) %>% 
+#   filter(grepl("Luo", ref) | grepl("Hohenberg", ref))
+# )
+```
+
+Fourth, and most importantly, we observe similar average accuracy ratings for true news in studies that randomly sampled true news from high-quality mainstream news sites. These samples of headlines are free of any selection bias that may originate from researchers selecting not obviously accurate true headlines. @stewartDistortingEffectsProducer2021 used CrowdTangle to automatically scrap 500 headlines from 20 mainstream news sites and had participants rate the accuracy of these headlines. These headlines were rated M = 5.05 (0.56) on a 7-point scale, or `r stewart` if we transpose the scale to reach from 0 to 1. This is similar to our (unweighed) average true news rating (`r  descriptives$data_descriptive_plot$true$mean_value`) when scaling effect sizes to range from 0 to 1 (see Fig. \@ref(fig:descriptive)). Similarly, @clemmvonhohenbergTruthBiasLeft2023 automatically scrapped true headlines using the Google News API. On a 7-point scale, the average true news rating was `r hohenberg$mean_accuracy_true` (`r hohenberg$sd_accuracy_true`), or `r hohenberg$scaled_mean` on a scale from 0 to 1.
+
+Finally, in the paragraph below we discuss an important recent working paper that nuances some of our findings. Aslett et al. (2023) automatically scrapped popular headlines on reliable and unreliable websites in the US over a period of one month. They found that participants discerned between true and false/misleading headlines, but that they were better at rating true headlines as true than false/misleading headlines as false/misleading (suggesting a negative response bias). We believe that the discrepancies between their findings and the ones of meta-analysis boil down to the sample of false news. The papers included in our meta-analysis almost exclusively rely on false news identified as such by fact-checking websites. By contrast, Aslett et al. (2023) hired a team of fact checkers to verify news items right after their publication. We suspect that this results in a sample of false news that are harder-to-detect as such than the ones in our samples for two reasons: First, since the news were not yet fact-checked, they might simply be less well known to be false. Second, there might be a selection bias, such that fact-checking websites verify blatantly false news first, because debunking them is easier. If this is the case, their false news items are harder to detect than the sub-selection of fact-checked ones that our meta-analysis is based on. For this reason, we note in the limitations of the manuscript that “the vast majority of studies in the meta-analysis relied on fact-checked false news. It is unclear whether the present findings generalize to non fact-checked false news and misinformation more broadly. For instance, it is likely that discerning true from misleading news is harder than discerning true from false news, and that people may discriminate true news better than misleading news”.
+
+Which result - the positive response bias of our meta-analysis or the negative response bias of Aslett et al. (2023) - deserves more attention? This depends on the population of false news that we want to draw inferences on. While we can only speculate, we think that the sample of false news of in Aslett et al. (2023) might be more representative of the population of false news as they get published (at least in a US context). However, there is a chance that the sample of false news in our meta analysis is more representative of the population of false news as they get consumed. This distinction between production and consumption matters, because the average person is not much exposed to the hyperpartisan and fringe media outlets, but mostly mainstream media (REF). It seems therefor reasonable to assume that the average person mostly encounters only exceptionally popular false news, and probably at a stage where they are already debunked by fact-checking websites.
+
+
+
+

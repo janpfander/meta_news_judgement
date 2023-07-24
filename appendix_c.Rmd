@@ -1,0 +1,152 @@
+# Individual level data {#individual-level}
+
+We compare the results of our main meta model to the individual-level data with the following procedure: First, we restrict our data to (i) only non-binary studies and (ii) only those studies that we have individual-level data on. Second, we run the same meta-analytic model as in the main analysis on the effect sizes of that subset of studies. Third, we take the individual-level data of that subset of studies and run a mixed model on it.
+
+The meta-model estimates are standardized. To be able to compare results, we standardize participants accuracy ratings in the individual-level data as follows: Within each sample, we calculated the standard deviation of accuracy ratings (fake and true news combined). Then, for each sample, we divided accuracy ratings by the respective standard deviation.
+
+We use the lme4 package [@batesFittingLinearMixedEffects2015] and its `lmer()` function to run the mixed models. The mixed models include random effects by participant (each participant provides several ratings for both true and fake news) and by sample for both the intercept and the effect of veracity. In our models, participants are nested in samples.
+
+```{r individual-data, message=FALSE}
+# load data
+individual_level_subset <- read_csv("data/individual_level_subset.csv")
+
+# compute standardized accuracy and error measures 
+individual_level_subset <- individual_level_subset %>% 
+  # remove binary scales and treatment conditions
+  filter(scale != "binary" & condition == "control") %>% 
+  # remove NA's for accuracy
+  drop_na(accuracy) %>% 
+  # identify unique samples
+  mutate(unique_sample_id = paste(paper_id, sample_id, sep = "_"),
+         # make an ungrouped versions just for comparison
+         ungrouped_std_acc = accuracy/sd(accuracy), 
+         ungrouped_std_err = error/sd(accuracy)
+         ) %>% 
+  # group by unique samples
+  group_by(unique_sample_id) %>% 
+  # calculate standardized accuracy measure
+  mutate(accuracy_std = accuracy/sd(accuracy), 
+         error_std = error/sd(accuracy)) %>% 
+  # ungroup
+  ungroup()
+```
+
+```{r reduce-data}
+# These steps are to identify those studies that we have raw data on in the 
+# meta data and subset that data accordingly. 
+
+# Step 1: extract `unique_sample_id` for samples in raw data
+raw_data_samples <- individual_level_subset %>%
+  reframe(unique(unique_sample_id)) %>% 
+  pull()
+
+# Step 2: filter the meta data frame
+# We want to reduce our data to continuous measure samples that we have raw data on
+reduce_samples <- function(data) {
+  
+    results <- data %>% 
+      filter(unique_sample_id %in% all_of(raw_data_samples))
+}
+# for accuracy
+reduced_accuracy_effect <- reduce_samples(accuracy_effect)
+# for error
+reduced_error_effect <- reduce_samples(error_effect)
+```
+
+```{r individual-models}
+# Run linear mixed model with random slope and intercept for subject id nested
+# in sample id
+
+# Discernment
+individual_level_accuracy <- lmer(accuracy_std ~ 1 + veracity + 
+                                 (1 + veracity | unique_sample_id / id),
+                data = individual_level_subset) %>% 
+  tidy(conf.int = TRUE) %>% 
+  mutate(model = "individual level", 
+         outcome = "accuracy") %>% 
+  # select only effect of interest
+  filter(term == "veracitytrue")
+
+# Response bias
+individual_level_error <- lmer(error_std ~ 1 + veracity + 
+                                 (1 + veracity | unique_sample_id / id),
+                data = individual_level_subset) %>% 
+  tidy(conf.int = TRUE) %>% 
+  mutate(model = "individual level", 
+         outcome = "error") %>% 
+  # select only effect of interest
+  filter(term == "veracitytrue") 
+```
+
+```{r reduced-meta-models}
+# Run the meta model on reduced data 
+reduced_accuracy <- robust(metafor::rma.mv(yi, vi, 
+                                  random = ~ 1 | unique_sample_id / 
+                                    observation_id, data = reduced_accuracy_effect ),
+                  cluster = reduced_accuracy_effect$unique_sample_id
+) %>% 
+  tidy(conf.int = TRUE) %>% 
+  mutate(model = "reduced meta", 
+         outcome = "accuracy")
+
+reduced_error <- robust(metafor::rma.mv(yi, vi, 
+                                  random = ~ 1 | unique_sample_id / 
+                                    observation_id, data = reduced_error_effect ),
+                  cluster = reduced_error_effect$unique_sample_id
+) %>% 
+  tidy(conf.int = TRUE) %>% 
+  mutate(model = "reduced meta", 
+         outcome = "error")
+```
+
+(ref:individual-vs-meta) Comparison of meta to individual level analysis (continuous scales only). "Meta" corresponds to the main results reported in the paper; "meta reduced" are the same meta-analytic models as in the main analysis but run on the subset of studies for which we have individual level data; "individual-level" corresponds to the result of mixed effect models run on the individual-level data. Symbols represent estimates, horizontal bars 95% Confidence intervals. 
+
+```{r individual-vs-meta, fig.cap="(ref:individual-vs-meta)"}
+# We store the results of all analyses in a single data frame
+comparison <- bind_rows(
+  # models individual level data 
+  individual_level_accuracy, 
+  individual_level_error,
+  # models on reduced data
+  reduced_accuracy, 
+  reduced_error,
+  # main models
+  robust_model_accuracy %>% 
+    tidy(conf.int = TRUE) %>% 
+    mutate(model = "meta", 
+           outcome = "accuracy"), 
+  robust_model_error %>% 
+    tidy(conf.int = TRUE) %>% 
+    mutate(model = "meta", 
+           outcome = "error")) %>% 
+  round_numbers() %>% 
+  mutate(
+    # give a nicer name to the estimate
+    term = "estimate", 
+    # extract confidence intervals
+    ci = glue::glue("[{conf.low}, {conf.high}]"),
+    # Change outcome names
+    outcome = ifelse(outcome == "accuracy", "Discernment", "Response bias")
+  )
+
+# plot results
+ggplot(comparison,
+       aes(x = estimate, y = model, shape = model, linetype = model)) +
+  geom_vline(xintercept = 0, linewidth = 0.5, linetype = "24", color = "grey") +
+  geom_pointrange(aes(xmin = conf.low, xmax = conf.high, color = model),
+                  position = position_dodge(width = -0.6)) +
+    # Add geom_text layer
+  geom_text(aes(label = paste0(estimate," ", ci)), position = position_dodge(), vjust = -0.8) + 
+  labs(x = "Standardized effect estimate", y = NULL, linetype = NULL,
+       shape = NULL, color = NULL) +
+  scale_color_viridis_d(option = "plasma", end = 0.9) +
+  plot_theme +
+  theme(legend.position = "bottom",
+        axis.text.y = element_blank(),
+        strip.text = element_text(size = 14)) +
+  facet_wrap(~outcome)
+
+```
+
+
+

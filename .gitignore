@@ -9,6 +9,7 @@
 *_files
 *output
 *data*
+*.docx
 
 # but do track .R files
 !*.R
