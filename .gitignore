@@ -9,3 +9,6 @@
 *_files
 *output
 *data*
+
+# but do track .R files
+!*.R
