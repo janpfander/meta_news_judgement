@@ -1,0 +1,81 @@
+Variable ,Description
+paperID,unique ID of a paper
+observation_id,unique ID of an effect size (i.e. assigning a number to each line of the data set)
+reference,"detailed reference, including title"
+ref,"first author and year, regardless of number of authors"
+peer_reviewed,whether the study appeared in a peer-reviewed journal ('yes') or not ('no')
+Study-level demographic data,
+sampleID,"unique sample ID within one paper
+e.g. the same sample can make for several observations (lines), for example when the same sample was measured various times (e.g. panel study) or the same sample makes for several measures (e.g. for different levels of 'news_family') "
+unique_sample_id,unique sample ID across all papers (achieved by combining paperID and sampleID)
+country,country where the study was conducted
+country_mapcompatible,country names corrected so that they are compatible with map data for plots 
+country_grouped,"version of country with fewer levels (levels: `US`, `non-US`)."
+continent,continent
+design,"Regarding the factor news veracity (i.e. true vs. fake news):
+between  = between two groups of participants (i.e one group only saw fake news, another group only saw true news)
+within = within one group of participants (i.e. participants saw both Fake AND True news)"
+online,whether study was online ('yes') or else ('no')
+pre_test,"Whether news have been selected after having been pre-tested for perceived accuracy (to ensure their discernment, i.e. that true news will be rated as more accurate than fake news). Code pre-tested materials as 'yes';  sometimes, researches did not explicitly test items for perceived accuracy but describe how implicitly it was a seleciton criterion (e.g. to avoid ceiling effects, or selecting 'plausible' news items), case in which code 'implicit_selection';  else code 'no' "
+details_pretest,"if pre-tested = 'yes', describe what the pre-test was like; even if pre-tested = 'no' but researchers describe how they selected news (e.g. avoid ceiling effects, select 'plausible' true news etc.), use this variable to describe the news selection"
+Stimuli for main condtion (true news vs. fake news),
+recycled_news,"whether a set of news items has been used in another paper we already coded ('recycled') or not ('original'), or partly (`partly`) "
+recycled_news_reference,"if `recycled_news` == ('recycled') or  ('partly'), indicates reference of source"
+news_selection,"Who selected the news items? (mostly 'researchers', but can also take other levels) "
+selection_fake_news,How were fake news items selected? (almost always 'fact-checking websites')
+selection_true_news,"How were true news items selected?(often 'mainstream media', but can also be otherwise, e.g. 'fact-checking websites')"
+news_family,"What 'family' of news wer selected? Can be anything, e.g. 'political', 'environment', 'covid' etc. "
+news_family_grouped,"version of news_family with only three levels: `political` (including concordant vs. discordant), `covid` and `other` (historical; environment/health/science/ /militar). The baseline for the regression will be `political`"
+political_concordance,Binary variable with two levels (contained in `news_family` variable; levels: `politically_concordant`  and `politically_discordant`)
+newsID,"unique ID within papers for the set of news that was used (to identify whether across observations, the same or different headlines have been used);
+If we can break results down for different news families (e.g. politically_concordant vs. politically_discordant), assign distinct IDs;
+sometimes, there is considerable overlap (e.g. a study first tested 8 headlines on one sample, and then the same 8 plus another 4 headlines on another sample) - 
+in this case, we'll code as the same news_ID;
+this way, when we want to calculate the overal number of unique news items used, will use the (max) function within one and the same news_ID"
+unique_news_id,unique sample ID across all papers (achieved by combining paperID and sampleID)
+n_news,"number of news items participants saw (fake + true news combined); 
+for between design (regarding fake vs. true news), too, report overall number of news (fake news + true news);
+If we can break results down for different news families (e.g. politically_concordant vs. politically_discordant), report only the number of news people saw in the respective category of 'news_family';"
+n_news_pool,"sometimes, participants see a selection of a pool of news -- if this is the case, report this number here;
+Code the news_pool with respect to ""news_family"": e.g. when politically concordant and discordant news were drawn from a total pool of 24 (in which both occur with equal frequency), code only '12' as news pool in the respective rows. "
+share_true_news,Share of true news among all news (true news *plus* fake news) that participants saw (typically it's 0.5)
+news_format,which format was the news presented  in
+news_format_grouped,"version of news_format with fewer levels (levels: `headline`, `headline_picture`, `headline_picture_lede`)"
+news_source,"whether participants were provided a news source or not (levels: `TRUE`, `FALSE`) "
+Dependent variable (accuracy; sharing) measure info ,
+accuracy_measure,"Type of proxy measure used to assess accuracy (e.g. accuracy, credibility, believability, trustworthiness, trust)"
+accuracy_measure_detailed,Details of the type of the exact question used to assess accuracy measure; be as specific as possible
+accuracy_scale_numeric,accuracy_measure but as a numeric variable (used to do calculations)
+accuracy_scale_grouped,"grouped version of accuracy_measure (levels: binary vs. 4-point vs. 6-point vs. 7-point vs. other, for all other numeric scales that were not frequent)"
+perfect_symetry,"Perfectly symmetrical scales include all binary scales (e.g. “True” or “False”, “Real” or “Fake”, is accurate “Yes” or “No”, is accurate and unbiased  “Yes” or “No”), and most Likert-scales (e.g. 1 to 7: “Definitely fake” [1] to “Definitely real” [7]). The most common scale, a 4-point Likert scale ([1] not at all accurate, [2] not very accurate, [3] somewhat accurate, [4] very accurate) however, is not perfectly symmetrical (the lower end point is more extreme than the upper endpoint). "
+accuracy_scale,"Indicates the the number of options in answering questions (e.g. for 7-point-likert scale, code '7');
+code 'binary' for binary scale (i.e.) two response options (e.g. fake/true); 
+sometimes, researchers standardized scales to reach from 0 to 1 (when e.g. original response scale was 1 to 6) and results for the original scales are not available - in this case code '1' "
+Info on treatment (experimental conditions/manipulation beyond the fake news/true news distinction) if tested,
+condition,"whether the sample has received an experimental intervention ('treatment') or whether it merely compared true - and fake news ('control');
+if only pooled (across all experimental conditions, including control condition) results are available, code 'overall';
+if results were reported for a given level of some correlate variable, report ('selected_by_correlate')"
+treatment_intention,"indicates whether the treatment was intended to increase discernment (most of the cases, e.g. literacy interventions) in which case code 'positive' or whether it was negative (few cases, e.g. time pressure) in which case code 'negative'"
+intervention,"type of experimental condition/intervention that was introduced (e.g. 'literacy') to evaluate its impact on accuracy ratings for fake news and true news;
+write longer names as 'onesinglewordwithoutspaces';
+if multiple treatments, put 'multiple_' first and then seperate different treatments with an underscore '_';
+be precise, if possible, about time lags: e.g. a literacy intervention that took place 1 month before the evaluation, code something like ""1month_before_litteracy"""
+intervention_detail,Details about the exact manipulation compared to the control conditon; be as specific as possible
+correlates,"sometimes, sub-results are available for levels of a certain correlates (e.g. emotionality); 
+we decided to code these seperately and this is already specified in the 'condition' variable; 
+here, we just give a name to the correlate (e.g. 'emtional_experience')"
+correlates_detail,Details about the correlate variable; be as specific as possible
+Statistics,
+n_subj (origninally 'n'),"sample size;
+if possible, report final sample size (after failed attention checks etc. removed);
+in case of between design, add sample size of treatment & control group"
+n_observations,observations are instances of news ratings (n_subj multiplied by n_news)
+mean_accuracy_fake (orignially mean_fake_as_accurate),mean of participants' fake news ratings
+error_fake,"we calculate an error for fake and true news separately, which we define as the distance of participant's actual ratings to the best possible ratings. For fake news, that is the bottom of the scale (or 0, on a binary scale). For true news, that is the top of the scale (or 1, on a binary scale). "
+sd_accuracy_fake (originally SD_fake_as_accurate),standard deviation (SD) of participants' fake news ratings
+mean_accuracy_true (originally mean_true_as_accurate),mean of participants' true news ratings
+error_true,"we calculate an error for fake and true news separately, which we define as the distance of participant's actual ratings to the best possible ratings. For fake news, that is the bottom of the scale (or 0, on a binary scale). For true news, that is the top of the scale (or 1, on a binary scale). "
+sd_accuracy_true (originally SD_true_as_accurate),standard deviation (SD) of participants' true news ratings
+values_from,"takes on value ""raw data"" if we downloaded the raw data and calculated the summary statistics ourselves, or ""paper"" if we relied on summary statistics that were reported in the paper, or ""authors"" if we contacted the authors and they provided the relevant summary statistics to us. "
+panel,"whehter the study measured long-term effects of interventions. Code 'panel' if at least one sample within the paper is measured at (at least) two different points in time, else code 'no'"
+comments,notes on the paper/effect size
