@@ -8,8 +8,9 @@
 # knitr and caching stuff
 *_files
 *output
-*data*
+/*data*
 *.docx
 
-# but do track .R files
-!*.R
+# but do track...
+!*.R 
+!data
