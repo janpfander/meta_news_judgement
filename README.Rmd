@@ -82,7 +82,7 @@ The `data_extraction.R` file contains the code to obtain summary statistics from
 
 Files preceded by `appendix_*` contain appendices to the `Pfander_Altay_2023.Rmd`. We stored them in seperate documents to keep the `Pfander_Altay_2023.Rmd` document as short as possible.
 
-Files preceded by `simulation_*` contain data scripts for generating and analyzing simulated data. We simulated data help us clarify our estimands and choose estimators before writing our pre-registration. 
+Files preceded by `simulation_*` contain data scripts for generating and analyzing simulated data. We simulated data to help us clarify our estimands and choose estimators before writing our pre-registration. 
 
 `preregistration.Rmd` contians the source file for our pre-registration which can be found on the [OSF](https://doi.org/10.17605/OSF.IO/SVC7U).
 

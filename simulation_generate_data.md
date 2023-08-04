@@ -1,0 +1,1096 @@
+---
+title: "Generate simulated data fake news review"
+bibliography: bibliography.bib
+author: "Anonymous"
+date: "2023-04-27"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+
+```r
+# load required packages
+library("lme4")        # model specification / estimation
+library("lmerTest")    # provides p-values in the output
+library("tidyverse")   # data wrangling and visualisation
+library("afex")        # anova and deriving p-values from lmer
+library("broom")       # extracting data from model fits 
+library("metafor")       # doing mata analysis
+#library("faux")        # generate correlated values from various distributions
+```
+
+### Why this simulation?
+
+* To inform our pre-registration. It will force us to be precise about the method to analyze our data and formulate our hypothesis in the language of R code. 
+* To test our expected performance of different meta-analytic approaches. Simulating participant-level data provides us with a benchmark. We can check which meta-analytic model recovers our data generating parameters best.
+
+## Generating synthetic data
+
+We will generate participant-level data for a set different studies with different numbers of samples. Think of it as the raw data from single papers. Papers often have involve different experiments, with different conditions. Therefor, within one paper, there are almost always several samples. These samples vary along variables, such as their sample size and number of news items tested on them.
+
+This simulation has four levels: 
+
+1. simulate data for a single sample. (In fact, we simulate pairs of of samples - control & treatment; more on that below)
+2. simulate a study with several samples
+3. simulate the (raw, participant-level) meta data with several studies (each containing several samples)
+4. calculate the (summarized, sample-level) meta data
+
+We build up towards a function that generates levels 1 to 3. We then do the calculation for level 4. 
+
+#### What do we do with that?
+
+We run meta-analytic models on the level 4 (summarized) data and compare them to a benchmark (mixed-effects) model that we run on level 3 (raw) data. We additionally compare both models to the parameters that we used to generate the data in the first place. All this, however, is done in a seperate document, `simulation_analyze_data`. The document at hand is all about generating the data.
+
+To give an overview of the data generating task: 
+
+We model our dependent variable `accuracy` based on the variables `veracity` and `condition` as well as random effects for `sample_id`. 
+
+The model includes `veracity` and `condition` as independent variables, but also their *interaction*. That is because one of our research questions is whether interventions are more likely to affect `fake` news or `true` news. 
+
+Before building the data set, set a seed for reproducibility. 
+
+```r
+# Set a seed
+set.seed(1234)
+```
+
+#### Variables
+
+To be parsimonious, our simulation will only includes the variables:
+- `paper_id` (identifier of the published paper)
+- `sample_id` (identifier of sample within one and the same published paper)
+- `subject_id` (identifier of unique subjects/participants)
+- `veracity`  (true vs. fake news)
+- `accuracy` (numeric accuracy rating)
+- `condition` (control vs. treatment)
+- `n` (number of participants per sample)
+
+Based on this, we will then calculate the variables:
+- `sd` (standard deviation)
+- `error` (distance to min of scale for fake news and to max of scale for true news)
+- `unique_sample_id` (unique sample id across all observations - a combination of `sample_id` and `paper_id`)
+
+#### Assumptions on study design
+
+Simulating random effect models can quickly get very complex. We aim to take a 'good-enough-approach' here by making some simplifying assumptions compared to what would be adequate in order to mirror the diverse set of studies we face. Our simplifiying assumptions are: 
+
+* all samples test `veracity` _within_ participants, i.e. all participants see both `fake` and `true` news 
+* there are always _pairs of samples_ for `condition`, i.e. each control group has a corresponding treatment group. Nevertheless, control and treatment groups are independent samples. In other words, condition is always tested _between_ participants 
+* we assume _random effects_ only for participants (`subject_id` and samples `sample_id`). We do *not* assume, e.g. random effects for different intervention types or different set of news headlines
+* we assume these random _effects_ to alter the `intercept` (average accuracy rating) and the effect of `veracity` (distance between true and fake accuracy ratings). We do *not* assume them to alter the interaction between `veracity` and `condition` (i.e. how true-fake difference differs between control and treatment)
+* the number of pairs of samples (control + treatment) per study varies on a uniform distribution between 1 and 4
+* the sample size of pairs of samples (control + treatment) of our studies vary on a uniform distribution between 200 and 2000 
+* the number of news items used across studies vary on a uniform distribution between 4 and 30, with equal numbers of `fake` and `true` items)
+
+#### Data generating function 
+
+The important parts of the design are:
+
+* Random factors : 
+    * `subject_id` 
+    * `sample_id` 
+* Fixed factor 1: `veracity` (levels = fake, true)
+    * within subject_id 
+    * within sample_id
+    
+* Fixed factor 2: `condition` (levels: control, treatment)
+    * between subject_id
+    * between sample_id
+    
+We use the following prefixes to designate model parameters and sampled values: 
+* `beta_*`: fixed effect parameters
+* `subj_*`: random effect parameters associated with subjects
+* `samp_*`: random effect parameters associated with samples
+* `SU_*`: sampled values for subject random effects
+* `SA_*`: sampled values for item random effects
+* `B_*`: sums of added beta's
+* `e_*`: residual sd
+
+We use the following suffices to refer to certain variables:
+
+* `*_0`: intercept
+* `*_v`: veracity
+* `*_c`: condition
+* `*_vc`: veracity * condition
+
+Other terms:
+
+* `*_rho`: correlations for that group's random effects
+* `n_*`: sample size
+* `sigma`: standard error
+    
+Within samples, we model accuracy with the following formula: 
+
+accuracy = beta_0 + SU_0 + (beta_v + SU_v) * veracity + beta_c * condition + beta_vc * condition * veracity + e_s
+
+Across samples, we add by-sample random effects to this formula. The final model for accuracy is thus the following: 
+
+accuracy = B_0 + B_v * veracity + beta_c * condition + beta_vc * condition * veracity + e_s
+
+with: 
+      * B_0  = beta_0  + SU_0 + SA_0
+      * B_v  = beta_v  + SU_v + SA_v
+
+## Step-by-step simulation of a pair of samples (control + treatment)
+
+To make this simulation as accessible as possible, we will first simulate a draw for one pair of samples (one for each value of `condition`, i.e. _control_ and _treatment_) based on the parameters defined above and perform the intended analyses on this data set.
+
+We set these parameters from pure gut feeling. They might be fairly off - but the point is that they allow us to see how well our models do in recovering them. 
+
+##### Establish the data-generating parameters
+
+
+```r
+beta_0  <- 0.5 # intercept; i.e., the grand mean accuracy rating
+beta_v  <- 0.3 # main effect of veracity
+beta_c  <- 0.1 # main effect of condition
+beta_vc <- 0.05 # interaction between veracity and condition
+subj_0   <- 0.1 # by-subject random intercept sd
+subj_1   <- 0.1 # by-subject random slope sd
+subj_rho <-  .2 # correlation between intercept and slope 
+sigma   <-  .2 # residual (error) sd
+```
+
+##### Simulate the sampling process 
+
+
+```r
+# set number of subjects and items
+n_subj  <- 200 # number of subjects for control AND treatment group (i.e. for two distinct equally sized samples)
+n_fake  <-  5 # number of fake news items 
+n_true  <-  5 # number of true news items
+```
+
+##### Simulate the sampling of news items
+
+
+```r
+# simulate a sample of items
+n_items <- n_fake + n_true
+
+items <- data.frame(
+  item_id = seq_len(n_items),
+  veracity = rep(c("fake", "true"), c(n_fake, n_true)),
+  # get a numeric version of veracity that is effect-coded (i.e. not 0 vs. 1, 
+  # but -0.5 and 0.5)
+  veracity_effect_code = rep(c(-0.5, 0.5), c(n_fake, n_true))
+)
+```
+
+##### Simulate the sampling of subjects
+
+We use the function `MASS::mvrnorm` to calculate the variance-covariance matrix between the two by-subject random effects. 
+
+
+```r
+# simulate a sample of subjects
+
+# calculate random intercept / random slope covariance
+covar <- subj_rho * subj_0 * subj_1
+
+# put values into variance-covariance matrix
+cov_mx  <- matrix(
+  c(subj_0^2, covar,
+    covar,   subj_1^2),
+  nrow = 2, byrow = TRUE)
+
+# generate the by-subject random effects
+subject_rfx <- MASS::mvrnorm(n = n_subj,
+                             mu = c(SU_0 = 0, SU_1 = 0),
+                             Sigma = cov_mx)
+
+# combine with subject IDs
+subjects <- data.frame(subject_id = seq_len(n_subj),
+                       subject_rfx, 
+                       condition = rep(c("control", "treatment"), 
+                                       c(n_subj/2, n_subj/2)),
+                       # get a numeric version of condition that is effect-coded 
+                       condition_effect_code = rep(c(-0.5, 0.5), 
+                                                   c(n_subj/2, n_subj/2)))
+```
+
+##### Check values
+
+
+```r
+data.frame(
+  parameter = c("subj_0", "subj_1", "subj_rho"),
+  value = c(subj_0, subj_1, subj_rho),
+  simulated = c(
+    sd(subjects$SU_0),
+    sd(subjects$SU_1), 
+    cor(subjects$SU_0, subjects$SU_1)
+  )
+)
+```
+
+```
+##   parameter value  simulated
+## 1    subj_0   0.1 0.09612001
+## 2    subj_1   0.1 0.10665247
+## 3  subj_rho   0.2 0.21403936
+```
+
+##### Simulate trials (encounters) and add sampling error
+
+A trial, in our case, is an instance in which an individual sees a particular news headline. So if, in total, each participants sees 10 headlines, there are 10 trials per participant.
+
+
+```r
+# cross subject and item IDs; add an error term
+# nrow(.) is the number of rows in the table
+trials <- crossing(subjects, items)  %>%
+  mutate(e_s = rnorm(nrow(.), mean = 0, sd = sigma))
+```
+
+##### Calculate accuracy values
+
+
+```r
+dat_sim <- trials %>%
+  mutate(accuracy = beta_0 + SU_0 + (beta_v + SU_1)*veracity_effect_code +
+           beta_c*condition_effect_code + beta_vc*
+           condition_effect_code*veracity_effect_code + e_s,
+         # truncate accuracy values so that they lie between 0 and one only
+         accuracy = case_when(accuracy < 0 ~ 0, 
+                              accuracy > 1 ~ 1,
+                              TRUE ~ accuracy)) %>% 
+  select(subject_id, item_id, veracity, veracity_effect_code, condition,
+         condition_effect_code, accuracy)
+```
+
+##### Plot the data
+
+Note that we used effect-coding for our veracity variable (which is why )
+
+
+```r
+control <- ggplot(dat_sim %>% filter(condition == "control"), 
+                  aes(veracity, accuracy, color = veracity, fill = veracity)) +
+  # predicted means
+  geom_hline(yintercept = (beta_0 - 0.5*beta_v - 0.5*beta_c + 0.25*beta_vc), color = "orange") +
+  geom_hline(yintercept = (beta_0 + 0.5*beta_v - 0.5*beta_c - 0.25*beta_vc), color = "dodgerblue") +
+  # actual data
+  geom_violin(alpha = 0.1) +
+  stat_summary(fun = mean,geom="crossbar", show.legend = FALSE) +
+  scale_color_manual(values = c("orange", "dodgerblue")) +
+    scale_fill_manual(values = c("orange", "dodgerblue")) + 
+  ggtitle("Control (predicted vs. simulated)")
+
+treatment <- ggplot(dat_sim %>% filter(condition == "treatment"), 
+                               aes(veracity, accuracy, color = veracity, fill = veracity)) +
+  # predicted means
+  geom_hline(yintercept = (beta_0 - 0.5*beta_v + 0.5*beta_c - 0.25*beta_vc), color = "orange") +
+  geom_hline(yintercept = (beta_0 + 0.5*beta_v + 0.5*beta_c + 0.25*beta_vc), color = "dodgerblue") +
+  # actual data
+  geom_violin(alpha = 0.1) +
+  stat_summary(fun = mean,geom="crossbar", show.legend = FALSE) +
+  scale_color_manual(values = c("orange", "dodgerblue")) +
+    scale_fill_manual(values = c("orange", "dodgerblue")) + 
+  ggtitle("Treatment (predicted vs. simulated)")
+
+# Combine plots and provide an overall title
+ggpubr::ggarrange(control, treatment,
+                  common.legend = TRUE,
+                  legend = "bottom")
+```
+
+![](simulation_generate_data_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+
+##### Analyze the simulated data
+
+
+```r
+# fit a linear mixed-effects model to data
+mod_sim <- lmer(accuracy ~ 1 + veracity_effect_code + condition_effect_code + veracity_effect_code*condition_effect_code + (1 + veracity | subject_id),
+                data = dat_sim)
+
+summary(mod_sim, corr = FALSE)
+```
+
+```
+## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+## lmerModLmerTest]
+## Formula: accuracy ~ 1 + veracity_effect_code + condition_effect_code +  
+##     veracity_effect_code * condition_effect_code + (1 + veracity |  
+##     subject_id)
+##    Data: dat_sim
+## 
+## REML criterion at convergence: -609
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -2.9522 -0.6730  0.0141  0.6529  2.8566 
+## 
+## Random effects:
+##  Groups     Name         Variance Std.Dev. Corr 
+##  subject_id (Intercept)  0.008511 0.09226       
+##             veracitytrue 0.006547 0.08092  -0.23
+##  Residual                0.036524 0.19111       
+## Number of obs: 2000, groups:  subject_id, 200
+## 
+## Fixed effects:
+##                                             Estimate Std. Error        df
+## (Intercept)                                4.911e-01  7.768e-03 1.980e+02
+## veracity_effect_code                       2.903e-01  1.029e-02 1.980e+02
+## condition_effect_code                      1.247e-01  1.554e-02 1.980e+02
+## veracity_effect_code:condition_effect_code 4.494e-02  2.057e-02 1.980e+02
+##                                            t value Pr(>|t|)    
+## (Intercept)                                 63.217  < 2e-16 ***
+## veracity_effect_code                        28.225  < 2e-16 ***
+## condition_effect_code                        8.028  8.6e-14 ***
+## veracity_effect_code:condition_effect_code   2.185   0.0301 *  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+Use `broom.mixed::tidy(mod_sim)` to get a tidy table of the results. Below, we added column "parameter" and "value", so you can compare the estimate from the model to the parameters you used to simulate the data. 
+
+
+```
+## # A tibble: 8 × 8
+##   effect   group      term         estimate std.error statistic    df    p.value
+##   <chr>    <chr>      <chr>           <dbl>     <dbl>     <dbl> <dbl>      <dbl>
+## 1 fixed    <NA>       (Intercept)    0.491    0.00777     63.2   198.  3.09e-133
+## 2 fixed    <NA>       veracity_ef…   0.290    0.0103      28.2   198.  2.52e- 71
+## 3 fixed    <NA>       condition_e…   0.125    0.0155       8.03  198.  8.60e- 14
+## 4 fixed    <NA>       veracity_ef…   0.0449   0.0206       2.18  198.  3.01e-  2
+## 5 ran_pars subject_id sd__(Interc…   0.0923  NA           NA      NA  NA        
+## 6 ran_pars subject_id cor__(Inter…  -0.232   NA           NA      NA  NA        
+## 7 ran_pars subject_id sd__veracit…   0.0809  NA           NA      NA  NA        
+## 8 ran_pars Residual   sd__Observa…   0.191   NA           NA      NA  NA
+```
+
+
+
+|effect   |group      |term                                       |parameter | value| estimate| std.error| statistic|  df| p.value|
+|:--------|:----------|:------------------------------------------|:---------|-----:|--------:|---------:|---------:|---:|-------:|
+|fixed    |NA         |(Intercept)                                |beta_0    |  0.50|    0.491|     0.008|    63.217| 198|    0.00|
+|fixed    |NA         |veracity_effect_code                       |beta_v    |  0.30|    0.290|     0.010|    28.225| 198|    0.00|
+|fixed    |NA         |condition_effect_code                      |beta_c    |  0.10|    0.125|     0.016|     8.028| 198|    0.00|
+|fixed    |NA         |veracity_effect_code:condition_effect_code |beta_vc   |  0.05|    0.045|     0.021|     2.185| 198|    0.03|
+|ran_pars |subject_id |sd__(Intercept)                            |subj_0    |  0.10|    0.092|        NA|        NA|  NA|      NA|
+|ran_pars |subject_id |cor__(Intercept).veracitytrue              |subj_rho  |  0.20|   -0.232|        NA|        NA|  NA|      NA|
+|ran_pars |subject_id |sd__veracitytrue                           |subj_1    |  0.10|    0.081|        NA|        NA|  NA|      NA|
+|ran_pars |Residual   |sd__Observation                            |sigma     |  0.20|    0.191|        NA|        NA|  NA|      NA|
+
+## I Single pair of samples (control & treatment) simulation function
+
+Now we put the data generating code above into a function so that we can run it repeatedly. 
+
+
+```r
+# set up the custom data simulation function
+draw_single_sample <- function(
+    n_subj  = 200, # number of participants (control + treatment)
+    n_fake  = 5,   # number of fake news items
+    n_true  = 5,   # number of true news items
+    beta_0  = 0.5, # intercept; i.e., the grand mean accuracy rating
+    beta_v  = 0.3, # main effect of veracity
+    beta_c  = 0.1, # main effect of condition
+    beta_vc = 0.05, # interaction between veracity and condition
+    subj_0   = 0.1, # by-subject random intercept sd
+    subj_1   = 0.1, # by-subject random slope sd
+    subj_rho     =  .2, # correlation between intercept and slope 
+    sigma   =  .2) { # residual (standard deviation)
+  
+  # simulate a sample of items
+  n_items <- n_fake + n_true
+  
+  items <- data.frame(
+    item_id = seq_len(n_items),
+    veracity = rep(c("fake", "true"), c(n_fake, n_true)),
+    # get a numeric version of veracity that is effect-coded (i.e. not 0 vs. 1, 
+    # but -0.5 and 0.5)
+    veracity_effect_code = rep(c(-0.5, 0.5), c(n_fake, n_true))
+  )
+  
+  # simulate a sample of subjects
+  
+  # calculate random intercept / random slope covariance
+  covar <- subj_rho * subj_0 * subj_1
+  
+  # put values into variance-covariance matrix
+  cov_mx  <- matrix(
+    c(subj_0^2, covar,
+      covar,   subj_1^2),
+    nrow = 2, byrow = TRUE)
+  
+  # generate the by-subject random effects
+  subject_rfx <- MASS::mvrnorm(n = n_subj,
+                               mu = c(SU_0 = 0, SU_1 = 0),
+                               Sigma = cov_mx)
+  
+  # combine with subject IDs
+  subjects <- data.frame(subject_id = seq_len(n_subj),
+                         subject_rfx, 
+                         condition = rep(c("control", "treatment"), 
+                                         c(n_subj/2, n_subj/2)),
+                         # get a numeric version of condition that is effect-coded 
+                         condition_effect_code = rep(c(-0.5, 0.5), 
+                                                     c(n_subj/2, n_subj/2)))
+  
+  # cross subject and item IDs and calculate accuracy
+  crossing(subjects, items)  %>%
+    mutate(e_s = rnorm(nrow(.), mean = 0, sd = sigma),
+           accuracy = beta_0 + SU_0 + (beta_v + SU_1)*veracity_effect_code +
+             beta_c*condition_effect_code + beta_vc*
+             condition_effect_code*veracity_effect_code + e_s,
+           # truncate accuracy values so that they lie between 0 and one only
+           accuracy = case_when(accuracy < 0 ~ 0, 
+                                accuracy > 1 ~ 1,
+                                TRUE ~ accuracy)) %>% 
+    select(subject_id, item_id, SU_0, SU_1, veracity, veracity_effect_code, condition,
+           condition_effect_code, accuracy)
+}
+```
+
+## II Single study simulation function
+
+Now that we have a function to simulate data for a single sample, we want another to simulate a single study (i.e. several samples). We want to vary the sample sizes of these studies, as well es the number of news items that participants saw.
+
+Note that, the way the function is written now, the sample size can vary considerably. 
+
+```r
+draw_single_study <- function(n_samples = NULL, ...) {
+    # ... is a shortcut that forwards any additional arguments to draw_single_sample()
+  
+  study <-  1:n_samples %>%
+    map_dfr(function(x) {
+      
+      # generate random number of subjects 
+      # Attention: combined sample size for treatment AND control
+      possible_sample_sizes <- seq(from = 200, to = 2000, by = 2)
+      sample_size <- sample(possible_sample_sizes, size = 1)
+      
+      # generate random number of news_items
+      possible_news_items_n <- seq(from = 4, to = 30, by = 2)
+      n_news_items <- sample(possible_news_items_n, size = 1)
+      
+      n_fake_news = n_news_items/2
+      n_true_news = n_news_items/2
+      
+      # To keep track of progress
+      print(paste("drawing sample number ", x))
+      
+      # Run our model and return the result
+      single_sample <- draw_single_sample(..., n_subj = sample_size, n_fake = n_fake_news, n_true = n_true_news)
+      return(single_sample %>% 
+        # add identifier of sample id
+        mutate(sample_id = x,
+               # distinguish control and treatment as distinct samples
+               sample_id = ifelse(condition == "treatment", paste0(x, "_b"), x),
+               # Attention: since our input was the combined sample size for 
+               # treatment AND control, we need to devide by 2 to have the 
+               # sample size per sample
+               n_subj = sample_size/2,
+               n_news = n_fake_news + n_true_news
+        ) %>% 
+        # get rid unnecessary variables
+        select(-c(SU_0, SU_1))
+        )
+    })
+}
+```
+
+## III (Rraw, participant-level) meta data simulation function
+
+Now that we have a function to simulate data for a single study, we want another to finally simulate our meta data (i.e. several studies). We want to be able to vary the number of studies.
+
+
+```r
+draw_meta_data <- function(n_studies = NULL, ...) {
+    # ... is a shortcut that forwards any additional arguments to draw_single_sample()
+  
+  meta_data <-  1:n_studies %>%
+    map_dfr(function(x) {
+      
+      # generate random number of samples
+      possible_n_samples_per_study <- seq(from = 1, to = 4, by = 1)
+      n_samples_per_study <- sample(possible_n_samples_per_study, size = 1)
+      
+      # To keep track of progress
+      print(paste("drawing STUDY number ", x))
+      
+      single_study <- draw_single_study(..., n_samples = n_samples_per_study)
+      return(single_study %>% 
+        # add identifier of sample id
+        mutate(paper_id = x)
+        )
+    })
+} 
+```
+
+#### Meta data with by-sample random effects
+
+So far, we assumed that all samples in our data are independent. In other words, no sample has been measured more than once - no multiple measures per sample or multiple waves on the same sample. However, in our actual data, we have a lot of this. So we need to add dependency of samples - we need to make some samples appear several times, and add the supposed effect to our accuracy variable. 
+
+To generate this data, we have to make additional assumptions and accordingly rewrite our `draw_single_study` function a little. Let's call the new one `draw_overlapping_samples_per_study`. 
+
+The assumptions we make are: 
+* For each study there is one - randomly chosen - pair of samples (treatment + control) that makes for several observations (either one, or two, or three more)
+* Samples only make for several observations within the same paper or study, but do not appear across different studies.
+* We then need to re-calculate accuracy scores already generated by the `draw_single_sample` function for each sample, in order to include random effects by sample_id in the data generating model. 
+
+
+```r
+draw_overlapping_samples_per_study <- function(n_samples = NULL, 
+                                               # correlation between intercept and slope by sample
+                                               samp_rho = 0.2, 
+                                               # by-subject random intercept sd
+                                               samp_0 = 0.1,
+                                               # by-subject random slope sd
+                                               samp_1 = 0.1, 
+                                               # set beta's and sigma again, 
+                                               # otherwise they will only be existing for the 
+                                               # draw_single_sample_function where they were specified
+                                               beta_0  = 0.5, # intercept; i.e., the grand mean accuracy rating
+                                               beta_v  = 0.3, # main effect of veracity,
+                                               beta_c  = 0.1, # main effect of condition
+                                               beta_vc = 0.05, # interaction between veracity and condition
+                                               sigma   =  .2, # residual (standard deviation)
+                                               ...) {
+    # ... is a shortcut that forwards any additional arguments to draw_single_sample()
+  
+  # Part I: Create study of independent samples
+  study <-  1:n_samples %>%
+    map_dfr(function(x) {
+      
+      # generate random number of subjects 
+      # Attention: combined sample size for treatment AND control
+      possible_sample_sizes <- seq(from = 200, to = 2000, by = 2)
+      sample_size <- sample(possible_sample_sizes, size = 1)
+      
+      # generate random number of news_items
+      possible_news_items_n <- seq(from = 4, to = 30, by = 2)
+      n_news_items <- sample(possible_news_items_n, size = 1)
+      
+      n_fake_news = n_news_items/2
+      n_true_news = n_news_items/2
+      
+      # To keep track of progress
+      print(paste("drawing sample number ", x))
+      
+      # Run our model and return the result
+      single_sample <- draw_single_sample(..., n_subj = sample_size, 
+                                          n_fake = n_fake_news, n_true = n_true_news)
+      return(single_sample %>% 
+        # add identifier of sample id
+        mutate(sample_id = x,
+               # distinguish control and treatment as distinct samples
+               sample_id = ifelse(condition == "treatment", paste0(x, "_b"), x),
+               # identify pairs of samples for treatment and control (let's call it
+               # a`experimental_id`)
+               experimental_id = x,
+               # Attention: since our input was the combined sample size for 
+               # treatment AND control, we need to devide by 2 to have the 
+               # sample size per sample
+               n_subj = sample_size/2,
+               n_news = n_fake_news + n_true_news
+        ))
+    })
+  
+  # Part II: ADD random effects by sample_id  (add corresponding arguments above)
+  
+  # say how many random effects to draw
+  # we multiply by 2 because n_samples indicates pairs of samples
+  n_by_sample_random_effects <- 2*n_samples 
+  
+  # calculate random intercept / random slope covariance
+  covar <- samp_rho * samp_0 * samp_1
+  
+  # put values into variance-covariance matrix
+  cov_mx  <- matrix(
+    c(samp_0^2, covar,
+      covar,   samp_1^2),
+    nrow = 2, byrow = TRUE)
+  
+  # generate the by-subject random effects
+  sample_rfx <- MASS::mvrnorm(n = n_by_sample_random_effects,
+                               mu = c(SA_0 = 0, SA_1 = 0),
+                               Sigma = cov_mx)
+  
+  # add sample IDs
+  sample_random_effects <- data.frame(sample_id = seq_len(n_by_sample_random_effects),
+                                      sample_rfx) %>% 
+    
+    mutate(
+      # make sample id_s take on the 1, 1_b format we used earlier to identify 
+      # pairs of samples
+      # treatment identifyer 
+      treatment_id = rep(c("", "_b"), times = n_by_sample_random_effects/2),
+      experimental_id = rep(1:(n_by_sample_random_effects/2), each = 2),
+      sample_id = paste0(experimental_id, treatment_id)
+      )
+  
+  # combine with study data
+  study <- left_join(study, sample_random_effects)
+  
+  # Part III: Create repeated measure(s) of one of the pairs of samples
+  
+  # possible sample_id's to select from
+  possible_sample_ids <- c(1:n_samples)
+  # randomly pick one
+  sample_to_repeat <- sample(possible_sample_ids, size = 1)
+  
+  # possible number of repetition (either 1, 2, or 3)
+  possible_number_of_reps <- c(1:3)
+  # randomply pick one
+  number_of_reps <- sample(possible_number_of_reps, size = 1)
+  
+  repeated_measures <-  1:number_of_reps %>%
+    map_dfr(function(x) { 
+      # take previously created data of independent studies
+      return(study %>% 
+        # pick the randomly chosen pair of samples
+        # we use "start with" since we want to repeat both control and treatment
+        filter (experimental_id == sample_to_repeat) %>% 
+          # add an identifier to distinguish replications later
+          mutate(replication = paste0("replication_", x)))
+      })
+  
+  # Part IV: re-calculate accuracy score
+  
+  # combine distinct sample data with repeated_measures data
+  rbind(study %>% mutate(replication = "original"), repeated_measures) %>% 
+    mutate(
+      # add together fixed and random effects for each effect
+      B_0  = beta_0  + SU_0 + SA_0,
+      B_v  = beta_v  + SU_1 + SA_1,
+      # add error term per observation
+      e_s = rnorm(nrow(.), mean = 0, sd = sigma),
+      # calculate accuracy
+      accuracy = B_0 + B_v*veracity_effect_code +
+        beta_c*condition_effect_code + beta_vc*
+        condition_effect_code*veracity_effect_code + e_s,
+      # truncate accuracy values so that they lie between 0 and one only
+      accuracy = case_when(accuracy < 0 ~ 0, 
+                           accuracy > 1 ~ 1,
+                           TRUE ~ accuracy)) %>% 
+    # remove unnecessary variables
+    select(-c(B_0, B_v, e_s, SU_0, SU_1, SA_0, SA_1, treatment_id))
+}
+```
+
+Finally, we need to insert our new function `draw_overlapping_samples_per_study` into our previously written `draw_meta_data` function. We will call that new function `draw_overlapping_meta_data`
+
+
+```r
+draw_overlapping_meta_data <- function(n_studies = NULL, ...) {
+    # ... is a shortcut that forwards any additional arguments to draw_single_sample()
+  
+  meta_data <-  1:n_studies %>%
+    map_dfr(function(x) {
+      
+      # generate random number of samples
+      possible_n_samples_per_study <- seq(from = 1, to = 4, by = 1)
+      n_samples_per_study <- sample(possible_n_samples_per_study, size = 1)
+      
+      # To keep track of progress
+      print(paste("drawing STUDY number ", x))
+      
+      single_study <- draw_overlapping_samples_per_study(..., n_samples = n_samples_per_study)
+      return(single_study %>% 
+        # add identifier of sample id
+        mutate(paper_id = x)
+        )
+    })
+} 
+```
+
+#### Simulate raw meta data
+
+Now we can simulate the data. 
+
+
+```r
+# generate data
+raw_meta_data <- draw_overlapping_meta_data(n_studies = 30)
+```
+
+```
+## [1] "drawing STUDY number  1"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing STUDY number  2"
+## [1] "drawing sample number  1"
+## [1] "drawing STUDY number  3"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing sample number  3"
+## [1] "drawing STUDY number  4"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing sample number  3"
+## [1] "drawing STUDY number  5"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing STUDY number  6"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing sample number  3"
+## [1] "drawing sample number  4"
+## [1] "drawing STUDY number  7"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing STUDY number  8"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing sample number  3"
+## [1] "drawing sample number  4"
+## [1] "drawing STUDY number  9"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing sample number  3"
+## [1] "drawing STUDY number  10"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing sample number  3"
+## [1] "drawing STUDY number  11"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing sample number  3"
+## [1] "drawing sample number  4"
+## [1] "drawing STUDY number  12"
+## [1] "drawing sample number  1"
+## [1] "drawing STUDY number  13"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing sample number  3"
+## [1] "drawing sample number  4"
+## [1] "drawing STUDY number  14"
+## [1] "drawing sample number  1"
+## [1] "drawing STUDY number  15"
+## [1] "drawing sample number  1"
+## [1] "drawing STUDY number  16"
+## [1] "drawing sample number  1"
+## [1] "drawing STUDY number  17"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing sample number  3"
+## [1] "drawing sample number  4"
+## [1] "drawing STUDY number  18"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing sample number  3"
+## [1] "drawing sample number  4"
+## [1] "drawing STUDY number  19"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing sample number  3"
+## [1] "drawing sample number  4"
+## [1] "drawing STUDY number  20"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing sample number  3"
+## [1] "drawing STUDY number  21"
+## [1] "drawing sample number  1"
+## [1] "drawing STUDY number  22"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing STUDY number  23"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing sample number  3"
+## [1] "drawing STUDY number  24"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing STUDY number  25"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing STUDY number  26"
+## [1] "drawing sample number  1"
+## [1] "drawing STUDY number  27"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing STUDY number  28"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing STUDY number  29"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+## [1] "drawing sample number  3"
+## [1] "drawing STUDY number  30"
+## [1] "drawing sample number  1"
+## [1] "drawing sample number  2"
+```
+
+
+
+```r
+# add identifier variables
+raw_meta_data <- raw_meta_data %>% 
+  mutate(
+    # uniquely identify samples
+    unique_sample_id = paste(paper_id, sample_id, sep = "_"), 
+    # we need to uniquely identify subjects 
+    # (So far, 'subject_id` is nested within 'sample_id', 
+    # which itself is nested within 'paper_id')
+    unique_subject_id = paste(paper_id, sample_id, subject_id, sep = "_")
+    ) 
+
+raw_meta_data <- raw_meta_data %>% 
+  # we need to uniquely identify subjects across all samples and studies. So far, 'subject_id'
+  # is nested within 'sample_id', which itself is nested within 'paper_id'
+  mutate(unique_subject_id = paste(paper_id, sample_id, subject_id, sep = "_"))
+```
+
+This simulated accuracy data on a single scale, namely from 0 to 1 (note that data was generated on a continuous measure, not a binary one). 
+
+However, in our actual data, studies use different scales. To be able to mimic this, we transform the accuracy scores.  
+
+First, we simulate an `accuracy_scale` variable, indicating the original scale accuracy was measured on (e.g. `4` means that the scale reached from 1 to 4). We simulate this variable at the sample-level (i.e. within one sample, all participants have used the same response scale)
+
+
+```r
+# Simulated data does not come with a `accuracy_scale` variable, so for demonstration
+# purposes, we simulate one. We vary this at the sample level.
+
+# generate one scale per sample
+scale_per_sample_id <- raw_meta_data %>% 
+  distinct(unique_sample_id) %>% 
+  mutate(accuracy_scale = sample(c("binary", 4, 6, 7), size = nrow(.), 
+                                 replace = TRUE))
+
+# Merge the generate data back into the data
+raw_meta_data <- left_join(raw_meta_data, scale_per_sample_id, by =  "unique_sample_id")
+
+# To later be able to calculate the error, we need to transform this variable 
+# into a numeric first. 
+# This is a step we will also have to do with our actual data in the analysis.
+
+is.character(raw_meta_data$accuracy_scale) # TRUE
+```
+
+```
+## [1] TRUE
+```
+
+```r
+# as.numeric() builds a numeric variable based on the original, character one. 
+# As a result, "binary" becomes "NA", all other numeric-style entries are
+# persevered. Let's check this first.
+table(as.numeric(raw_meta_data$accuracy_scale), useNA = "always")
+```
+
+```
+## Warning in table(as.numeric(raw_meta_data$accuracy_scale), useNA = "always"):
+## NAs introduced by coercion
+```
+
+```
+## 
+##      4      6      7   <NA> 
+## 726520 526348 613684 584156
+```
+
+```r
+# apply
+raw_meta_data  <- raw_meta_data %>% 
+  mutate(accuracy_scale_numeric = as.numeric(accuracy_scale))
+```
+
+```
+## Warning: There was 1 warning in `mutate()`.
+## ℹ In argument: `accuracy_scale_numeric = as.numeric(accuracy_scale)`.
+## Caused by warning:
+## ! NAs introduced by coercion
+```
+
+
+2. Transform the `accuracy` value as a function of the accuracy scale in order to have roughly realistic values (e.g. the values of a scale of `4` should lie between 1 and 4). A function we would use to transform continuous scales to range from 0 to 1 would be this: 
+
+
+```r
+# take for example
+accuracy_value = 2.5
+scale = 4
+
+# transforming function
+to_0_to_1_scale <- function(accuracy_value, scale) {
+  
+   transposed_value <- (accuracy_value - 1)/(scale - 1)
+   
+   return(transposed_value)
+}
+
+transposed_value <- to_0_to_1_scale(accuracy_value, scale)
+transposed_value
+```
+
+```
+## [1] 0.5
+```
+
+Here, we need the reverse function:
+
+
+```r
+# take for example
+accuracy_value = 0.5
+scale = 4
+
+# transforming function
+to_continuous <- function(accuracy_value, scale) {
+  
+     # add a bit to be used below when we apply the function to make sure
+   # accuracy values are presevered when scale is NA (the case of binary scales
+   # in our coding)
+  
+   transposed_value <- ifelse(is.na(scale), accuracy_value, 
+                              1 + accuracy_value*(scale - 1)
+                              )
+   
+   return(transposed_value)
+}
+
+transposed_value <- to_continuous(accuracy_value, scale)
+transposed_value
+```
+
+```
+## [1] 2.5
+```
+
+We then apply this function to our data frame
+  
+
+```r
+# transform accuracy values according to the `accuracy_scale_numeric` variable
+
+# check transformation
+raw_meta_data %>% 
+  mutate(across(c("accuracy"), 
+                ~to_continuous(accuracy_value = ., 
+                              scale = accuracy_scale_numeric),
+                .names = "{.col}_new")
+         ) %>% slice(1:100) %>% select(accuracy_scale_numeric, veracity, accuracy, accuracy_new)
+```
+
+```
+## # A tibble: 100 × 4
+##    accuracy_scale_numeric veracity accuracy accuracy_new
+##                     <dbl> <chr>       <dbl>        <dbl>
+##  1                      4 fake       0.340          2.02
+##  2                      4 fake       0              1   
+##  3                      4 fake       0.373          2.12
+##  4                      4 fake       0.0810         1.24
+##  5                      4 fake       0.237          1.71
+##  6                      4 fake       0              1   
+##  7                      4 fake       0.303          1.91
+##  8                      4 fake       0.186          1.56
+##  9                      4 fake       0.226          1.68
+## 10                      4 true       0.206          1.62
+## # ℹ 90 more rows
+```
+
+```r
+# apply
+raw_meta_data <- raw_meta_data %>% 
+  mutate(
+    # keep a variable with the originally generated accuracy scores from
+    # 0 to 1
+    accuracy_original = accuracy,
+    across(c("accuracy"), 
+                ~to_continuous(accuracy_value = ., 
+                              scale = accuracy_scale_numeric))
+         )
+```
+
+
+## IV Calculate summarized meta data
+
+3. Summarize the raw data and bring it to wide format. This is the same code we used above before.
+
+
+```r
+# summarize 
+meta <- raw_meta_data %>% 
+  # Our data will be summarized at sample level.
+  # Replications share the same 'sample_id' as the original measures.
+  # So, we need to group by 'replication', too, in order to retain all 
+  # unique observations of samples.
+  # If we didn't do this, replications would get summarized together 
+  # with their original observations
+  mutate(observation_id = paste(sample_id, replication, sep = "_")) %>% 
+  group_by(paper_id, sample_id, replication, veracity, 
+           condition) %>% 
+  summarise(
+    # get summary statistics for both the orginal (0 to 1) accuarcy score as 
+    # well as for the scaled version
+    across(c(accuracy_original, accuracy), 
+           list(mean = mean, sd = sd), 
+           .names = "{.fn}_{.col}"),
+            n_observations = n(), # n_subj*(n_news/2) [divided by 2 because we grouped by veracity]
+            n_subj = mean(n_subj), # number of participants 
+            n_news = mean(n_news), 
+            # accuracy scales
+            accuracy_scale = first(accuracy_scale),
+            accuracy_scale_numeric = first(accuracy_scale_numeric)
+            ) %>%  # number of news items 
+  mutate(
+    # in later analysis, we want to uniquely identify samples.
+    # So far, 'sample_id' is nested within 'paper_id'.
+    unique_sample_id = paste(paper_id, sample_id, sep = "_"))
+```
+
+```
+## `summarise()` has grouped output by 'paper_id', 'sample_id', 'replication',
+## 'veracity'. You can override using the `.groups` argument.
+```
+
+
+```r
+# bring to wide format
+meta_wide <- meta %>% 
+  pivot_wider(names_from = veracity, 
+              # make sure to transform both the original (0 to 1) accuracy score as 
+              # well as the scaled version
+              values_from = matches("accuracy") & !starts_with("accuracy")) %>% 
+  # meta comes as grouped
+  # ungroup is necessary to use the mutate function below
+  ungroup() %>% 
+  mutate(
+    # for multilevel models, later , we want to identify all observations
+    # (i.e. the individual effect sizes) of our data 
+    observation_id = 1:nrow(.))
+```
+
+## V Store simulation data
+
+#### Store raw data
+
+
+```r
+# store data
+getwd() # check where you store the data
+```
+
+```
+## [1] "/Users/jan/Desktop/review_fake_news"
+```
+
+```r
+filename <- "data_from_simulation/raw.csv" # change for new analyses
+write_csv(raw_meta_data, filename)
+```
+
+#### Store summarized, wide-format data
+
+
+```r
+# store data
+getwd() # check where you store the data
+```
+
+```
+## [1] "/Users/jan/Desktop/review_fake_news"
+```
+
+```r
+filename <- "data_from_simulation/meta.csv" # change for new analyses
+write_csv(meta_wide, filename)
+```
+
+
