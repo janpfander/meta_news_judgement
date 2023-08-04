@@ -1,6 +1,6 @@
 ---
 title: "Generate numbers for PRISMA flow diagram"
-author: "Anonymous"
+author: "Jan Pfänder & Sacha Altay"
 date: "2023-04-27"
 output: 
   html_document: 

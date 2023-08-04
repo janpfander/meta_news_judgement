@@ -9,7 +9,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Anonymous" />
+<meta name="author" content="Jan Pfänder &amp; Sacha Altay" />
 
 <meta name="date" content="2023-04-27" />
 
@@ -373,7 +373,7 @@ display: none;
 
 
 <h1 class="title toc-ignore">Cleaning raw coded data set</h1>
-<h4 class="author">Anonymous</h4>
+<h4 class="author">Jan Pfänder &amp; Sacha Altay</h4>
 <h4 class="date">2023-04-27</h4>
 
 </div>
@@ -560,6 +560,15 @@ credible; 3—quite credible; 4—credible; 5—very credible).”)</p></li>
 <pre class="r"><code>d &lt;- d %&gt;% 
   # filter out problematic studies
   filter(!ref %in% c(&quot;Hoes_2023&quot;, &quot;Calvillo_2020&quot;, &quot;Baptista_2021&quot;))</code></pre>
+</div>
+<div id="control-condition-only" class="section level2">
+<h2>Control condition only</h2>
+<p>We had collected data for treatment conditions, too. However, this
+data is irrelevant for this project, so we filter it out here.</p>
+<pre class="r"><code># load data
+d &lt;- d %&gt;% 
+  # control conditions only
+  filter(condition == &quot;control&quot;)</code></pre>
 </div>
 <div id="write-out-cleaned-data" class="section level2">
 <h2>Write out cleaned data</h2>

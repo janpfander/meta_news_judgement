@@ -1,9 +1,11 @@
 # Country comparison {#country-comparison}
 
-## Discernment by country
+\FloatBarrier  
 
-```{r, echo=FALSE}
-ggplot(accuracy_effect %>% 
+(ref:discernment-countries) Discernment estimates by country. 
+
+```{r discernment-countries, fig.cap="(ref:discernment-countries)", fig.height= 6.9}
+bars <- ggplot(accuracy_effect %>% 
          group_by(country_mapcompatible) %>% 
          summarise(yi = mean(yi), 
                    n_effect = n_distinct(observation_id)) %>% 
@@ -19,16 +21,16 @@ ggplot(accuracy_effect %>%
   # add labels for effects
   geom_text(aes(label = paste0("n= ", n_effect)), hjust = -0.5, color = "black") +  # Add geom_text for n_effect labels
   plot_theme
+
+map <- plot_map(fill = "discernment")
+
+ggarrange(bars, map, ncol = 1)
 ```
 
-```{r, echo=FALSE}
-plot_map(fill = "discernment")
-```
+(ref:bias-countries) Response bias estimates by country. 
 
-## Response bias by country
-
-```{r, echo=FALSE}
-ggplot(error_effect %>% 
+```{r bias-countries, fig.cap="(ref:bias-countries)", fig.height= 6.9}
+bars <- ggplot(error_effect %>% 
          group_by(country_mapcompatible) %>% 
          summarise(yi = mean(yi), 
                    n_effect = n_distinct(observation_id)) %>% 
@@ -46,13 +48,9 @@ ggplot(error_effect %>%
   # add labels for effects
   geom_text(aes(y = yi + h_adjust, label = paste0("n= ", n_effect)),  color = "black") +  # Add geom_text for n_effect labels
   plot_theme
+
+map <- plot_map(fill = "response bias", data = error_effect)
+
+ggarrange(bars, map, ncol = 1)
 ```
-
-```{r, echo=FALSE}
-plot_map(fill = "response bias", data = error_effect)
-```
-
-
-
-
 

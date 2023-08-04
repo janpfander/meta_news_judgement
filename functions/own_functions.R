@@ -728,7 +728,7 @@ plot_descriptive <- function(return = "plot"){
                # for all other numeric scales
                (.x-1)  / (accuracy_scale_numeric - 1)), 
              .names = "std_{col}"),
-      # standardize_accuracy
+      # standardize_error
       across(starts_with("error"), 
              ~ifelse(
                # Binary and 0 to 1 scale are already on the wanted scale

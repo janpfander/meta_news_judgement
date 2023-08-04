@@ -1,6 +1,6 @@
 ---
 title: "Cleaning raw coded data set"
-author: "Anonymous"
+author: "Jan Pfänder & Sacha Altay"
 date: "2023-04-27"
 output: 
   html_document: 
@@ -212,6 +212,19 @@ d <- d %>%
   # filter out problematic studies
   filter(!ref %in% c("Hoes_2023", "Calvillo_2020", "Baptista_2021"))
 ```
+
+## Control condition only
+
+We had collected data for treatment conditions, too. However, this data is irrelevant for this project, so we filter it out here. 
+
+
+```r
+# load data
+d <- d %>% 
+  # control conditions only
+  filter(condition == "control")
+```
+
 
 ## Write out cleaned data
 

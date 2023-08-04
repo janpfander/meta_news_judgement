@@ -10,7 +10,8 @@
 *output
 /*data*
 *.docx
+*.tex
+*.log
 
 # but do track...
 !*.R 
-!data

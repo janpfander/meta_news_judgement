@@ -2,11 +2,11 @@
 
 ## Alternative effect sizes
 
-Table \@ref(tab:effects) shows the estimated SMCC for both discernment (H1) and response bias (H2). For reference, we included the estimates for two alternative effects: A standardized mean difference assuming independence (SMD), precisely Hedge's g, and a standardized change score using raw (instead of change) standardization (SMCR) [@becker1988]. When using raw score standardization, the standardized mean change expresses the effect size in terms of the standard deviation units of the pre-treatment (in our case fake news) scores, rather than the standard deviation of the difference scores (involving the correlation) [@becker1988]. While our SMCC depends on the value of the correlation between the fake and true news scores, the SMD and the SMCR do not. The interpretation of all three effect measures is similar: all are expressed in terms of standard deviations. Yet, they are different estimators, because they rely on different standard deviations, thereby producing different estimates and standard errors [@morris2002]. Due to the low average correlation between fake and true news ratings, the SMCC produces the most conservative (i.e. smallest) effect estimates for both discernment and response bias.
+\FloatBarrier  
 
-(ref:effects) Comparison of different effect sizes. The SMCC (Standardized mean change using change score standardization) is the estimator we pre-registered and report in the main analysis. For reference, we provide the results we obtain when using a standardized mean difference assuming independence (SMD), precisely Hedge's g, and a standardized change score using raw (instead of change) standardization (SMCR). Note that for the `r descriptives$design$between$n` (out of `r descriptives$effects`) effects from studies that used a between participant design, we always calculated Hedge's G, including in those results listed under "SMCC" and "SMCR".
+Table \@ref(tab:effects) shows the estimated SMCC for both discernment (H1) and response bias (H2). For reference, we included the estimates for two alternative estimators: A standardized mean difference assuming independence (SMD), precisely Hedge's g, and a standardized mean change using raw (instead of change) score standardization (SMCR) [@becker1988]. When using raw score standardization, the standardized mean change expresses the effect size in terms of the standard deviation units of the pre-treatment (in our case false news) scores, rather than the standard deviation of the difference scores (involving the correlation) [@becker1988]. While our SMCC depends on the value of the correlation between the false and true news scores, the SMD and the SMCR do not. The interpretation of all three effect measures is similar: all are expressed in terms of standard deviations. Yet, they are different estimators, because they rely on different standard deviations, thereby producing different estimates and standard errors [@morris2002]. Due to the low average correlation between false and true news ratings, the SMCC produces the most conservative (i.e. smallest) effect estimates for both discernment and response bias.
 
-```{r effects}
+```{r effects, fig.pos='H'}
 # main result table
 modelsummary::modelsummary(list("Discernment" = robust_model_accuracy, 
                                 "Response bias" = robust_model_error,
@@ -17,17 +17,19 @@ modelsummary::modelsummary(list("Discernment" = robust_model_accuracy,
                            title = 'Model results', 
                            stars = TRUE, 
                            coef_rename = c("overall" = "Estimate")
-                           ) #%>%
-  # add_header_above(c(" " = 1, "SMCC" = 2, "SMCR" = 2, "SMD" = 2)) %>%
-  # add_header_above(c(" " = 1, "Main estimator (preregistered) " = 2, "Alternative estimators" = 4),
-  #                  line = FALSE, italic = TRUE) %>% 
-  # # make smaller to fit
-  # kable_styling(latex_options = "scale_down")
+                           ) %>%
+  add_header_above(c(" " = 1, "SMCC" = 2, "SMCR" = 2, "SMD" = 2)) %>%
+  add_header_above(c(" " = 1, "Main estimator (preregistered) " = 2, "Alternative estimators" = 4),
+                   line = FALSE, italic = TRUE) %>%
+  # make smaller to fit
+  kable_styling(latex_options = "scale_down") %>%
+  footnote(general = "Comparison of different effect sizes. The SMCC (Standardized mean change using change score standardization) is the estimator we pre-registered and report in the main analysis. For reference, we provide the results we obtain when using a standardized mean difference assuming independence (SMD), precisely Hedge's g, and a standardized change score using raw (instead of change) standardization (SMCR). For effects from studies that used a between participant design, we always calculated Hedge's G, including in those results listed under \"SMCC\" and \"SMCR\"."
+           , threeparttable = TRUE)
 ```
 
 ## Sensitivity analysis for imputed correlation
 
-When using *standardized* effect measures, accounting for dependency by imputing correlations impacts on the magnitude of the effect estimate itself. That is because, in this case, the standard deviation is not only used to calculate the standard error (as with *non* standardized effects), but also for the effect itself (difference between true and fake measured in units of standard deviations). [Standardized effect measures depending on imputed correlations should therefore be accompanied by a sensitivity analysis](https://training.cochrane.org/handbook/current/chapter-23#section-23-2-7-2), i.e. check how sensitive the effect estimate is to different imputed correlation values [@higgins_cochrane_2019]. Figures \@ref(fig:correlations-discernment) and \@ref(fig:correlations-bias) show even when imputing any other correlation value occurring in the individual-level data, our results hold. Moreover, all estimates from those imputations yield conservative (i.e. smaller) estimates compared to an effect size assuming independence. 
+When using *standardized* effect measures, accounting for dependency by imputing correlations impacts the magnitude of the effect estimate itself. That is because, in this case, the standard deviation is not only used to calculate the standard error (as with *non* standardized effects), but also for the effect itself. [Standardized effect measures depending on imputed correlations should therefore be accompanied by a sensitivity analysis](https://training.cochrane.org/handbook/current/chapter-23#section-23-2-7-2), i.e. check how sensitive the effect estimate is to different imputed correlation values [@higgins_cochrane_2019]. Figures \@ref(fig:correlations-discernment) and \@ref(fig:correlations-bias) show that our results hold when imputing any of the other correlation values occurring in the individual-level data. Moreover, all estimates from those imputations yield conservative (i.e. smaller) estimates compared to Hedges' g.
 ```{r, message = FALSE}
 # load individual level subset data and average correlation
 individual_level_subset <- read_csv("data/individual_level_subset.csv")
@@ -198,13 +200,13 @@ return(list(effect_plot, SE_plot))
 accuracy_plots <- robustness_plot("accuracy")
 ```
 
-(ref:correlations-discernment) Estimated effect and standard error for discernment as a function of the imputed correlation value. Each dot represents an estimate corresponding to an imputed correlation value. There is one dot for each observed intra-sample correlation in the individual-level data. For reference, the horizontal dotted lines mark the estimates from obtained when using Hedges'g, an effect size assuming independence.  
+(ref:correlations-discernment) Estimated effect and standard error for discernment as a function of the imputed correlation value. Each dot represents an estimate corresponding to an imputed correlation value. There is one dot for each observed intra-sample correlation in the individual-level data. For reference, the horizontal dotted lines mark the estimate obtained when using Hedges'g, an effect size assuming independence.  
 
 ```{r correlations-discernment, fig.cap="(ref:correlations-discernment)", fig.height= 3}
 accuracy_plots[[1]] + accuracy_plots[[2]]
 ```
 
-(ref:correlations-bias) Estimated effect and standard error for response bias as a function of the imputed correlation value. Each dot represents an estimate corresponding to an imputed correlation value. There is one dot for each observed intra-sample correlation in the individual-level data. For reference, the horizontal dotted lines mark the estimates from obtained when using Hedges'g, an effect size assuming independence. 
+(ref:correlations-bias) Estimated effect and standard error for response bias as a function of the imputed correlation value. Each dot represents an estimate corresponding to an imputed correlation value. There is one dot for each observed intra-sample correlation in the individual-level data. For reference, the horizontal dotted lines mark the estimate obtained when using Hedges'g, an effect size assuming independence. 
 
 ```{r, include=FALSE}
 # make plots for error
@@ -217,7 +219,24 @@ error_plots[[1]] + error_plots[[2]]
 
 ## Effects on original scales
 
-Table \@ref(tab:scales) shows estimates by scale, in the original units of the scale. The table is intended to help interpret the magnitude of the effect sizes report in the main findings. Note that some scales occur very rarely only (see Tab. \@ref(tab:n-scales)), hence making their meta-analytic estimates less meaningful.
+Table \@ref(tab:scales) shows estimates by scale, in the original units of the scale. The table is intended to help interpret the magnitude of the effect sizes reported in the main findings. Note that some scales occur very rarely only (see Tab. \@ref(tab:n-scales)), hence making their meta-analytic estimates less meaningful.
+
+```{r n-scales}
+meta_wide %>% group_by(accuracy_scale) %>% summarise(Papers = n_distinct(paperID),
+                                                     Samples = n_distinct(unique_sample_id),
+                                                     Effects = n_distinct(observation_id)
+                                                     ) %>% 
+  mutate(accuracy_scale = ifelse(accuracy_scale == "binary", accuracy_scale, 
+                                 paste0(accuracy_scale, "-point"))) %>% 
+  pivot_longer(-accuracy_scale,
+               names_to = "variable",
+               values_to = "frequency"
+               ) %>% 
+  pivot_wider(names_from = accuracy_scale, 
+              values_from = frequency) %>% 
+  column_to_rownames(var = "variable") %>% 
+  apa_table(note = "Frequency table of scales.")
+```
 
 ```{r, include=FALSE}
 # run models by scale
@@ -259,32 +278,17 @@ results <- list("Discernment" = accuracy_list,
 
 # by scale result table
 modelsummary::modelsummary(results,
-                           title = '(Raw) Mean Differences between true and fake news', 
+                           title = '(Raw) Mean Differences between true and false news', 
                            stars = TRUE, 
-                           coef_rename = c("overall" = "True news (compared to fake)"),
+                           coef_rename = c("overall" = "Estimate"),
                            shape = "rbind"
-                           ) #%>%
-  # # make smaller to fit
-  # kable_styling(latex_options = "scale_down") %>%
-  # footnote(general = "Note that one scale, a 100-point scale, does not appear since there was only one effect size on that scale")
+                           ) %>%
+  # make smaller to fit
+  kable_styling(latex_options = "scale_down") %>%
+  footnote(general = "One scale, a 100-point scale, does not appear since there was only one effect size on that scale")
 
 ```
 
-```{r n-scales}
-meta_wide %>% group_by(accuracy_scale) %>% summarise(Papers = n_distinct(paperID),
-                                                     Samples = n_distinct(unique_sample_id),
-                                                     Effects = n_distinct(observation_id)
-                                                     ) %>% 
-  mutate(accuracy_scale = ifelse(accuracy_scale == "binary", accuracy_scale, 
-                                 paste0(accuracy_scale, "-point"))) %>% 
-  pivot_longer(-accuracy_scale,
-               names_to = "variable",
-               values_to = "frequency"
-               ) %>% 
-  pivot_wider(names_from = accuracy_scale, 
-              values_from = frequency) %>% 
-  column_to_rownames(var = "variable") %>% 
-  apa_table(note = "Frequency table of scales.")
-```
+
 
 

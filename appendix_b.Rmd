@@ -1,8 +1,10 @@
 # Moderators {#moderators}
 
-All moderator analyses, with the exception of political concordance, only reveal statistical associations, not causal effects, because the moderator variables vary mostly between studies: For example, some studies provided news sources, while others did not. But these studies differ in myriad other ways, all of which potentially confound any observed association.
+\FloatBarrier  
 
-Table \@ref(tab:moderators) shows the results of the different meta regressions by moderator variable. Figures \@ref(fig:moderators-discernment) and  \@ref(fig:moderators-bias) visualize those results by showing the distribution of effect sizes by moderator variable.
+All moderator analyses, with the exception of political concordance, only reveal statistical associations, not causal effects, because the moderator variables vary mostly between studies: For example, some studies provided news sources, while others did not. But these studies differ in many other ways, all of which potentially confound any observed association.
+
+Table \@ref(tab:moderators) shows the results of the different meta regressions by moderator variable. Figures \@ref(fig:moderators-discernment) and \@ref(fig:moderators-bias) visualize those results by showing the distribution of effect sizes by moderator variable.
 
 ```{r moderators}
 # display models
@@ -21,12 +23,12 @@ modelsummary::modelsummary(c(moderator_models_accuracy, moderator_models_error),
                                            "accuracy_scale_groupedbinary" = "Accuracy Scale: binary (vs. 4)",
                                            "accuracy_scale_groupedother" = "Accuracy Scale: other (vs. 4)"
                                            )
-                           ) #%>%
-  # add_header_above(c(" " = 1, "Outcome: Accuracy" = 8, "Outcome: Error" = 8)) %>%
-  # # rotate 90 degrees since massive table
-  # kableExtra::landscape() %>% 
-  # # make smaller to fit
-  # kable_styling(latex_options = "scale_down")
+                           ) %>%
+  add_header_above(c(" " = 1, "Outcome: Accuracy" = 8, "Outcome: Error" = 8)) %>%
+  # rotate 90 degrees since massive table
+  kableExtra::landscape() %>%
+  # make smaller to fit
+  kable_styling(latex_options = "scale_down")
 ```
 
 (ref:moderators-discernment) Distribution of effect sizes for discernment by moderator variables.
@@ -45,9 +47,7 @@ moderator_plots(error_effect, "Response bias")
 
 #### Scale symmetry
 
-The one moderator variable we did not preregister testing for is perfect scale symmetry. 
-
-First, to avoid biasing our estimate for H2, we removed one study [@baptistaInfluencePoliticalIdeology2021] that used a very asymmetrical set of answer options asked participants("According to your knowledge, how do you rate the following headline? 1---not credible; 2---somehow credible; 3---quite credible; 4---credible; 5---very credible"). Second, we coded whether the remaining scales were perfectly symmetrical or not. Table \@ref(tab:n-symmetry) shows the frequency by which both scale types occurred. 
+First, to avoid biasing our estimate for H2, we removed one study [@baptistaInfluencePoliticalIdeology2021] that used a very asymmetrical set of answer options asked participants ("According to your knowledge, how do you rate the following headline? 1---not credible; 2---somehow credible; 3---quite credible; 4---credible; 5---very credible"). Second, we coded whether the remaining scales were perfectly symmetrical or not. Table \@ref(tab:n-symmetry) shows the frequency by which both scale types occurred.
 
 ```{r n-symmetry}
 meta_wide %>% group_by(perfect_symetry) %>% summarise(Papers = n_distinct(paperID),
@@ -66,17 +66,19 @@ meta_wide %>% group_by(perfect_symetry) %>% summarise(Papers = n_distinct(paperI
   apa_table(note = "Frequency table of scales.")
 ```
 
-Perfectly symmetrical scales include all binary scales (e.g. “True” or “False”, “Real” or “Fake”, is accurate “Yes” or “No”, is accurate and unbiased  “Yes” or “No”), and most Likert-scales (1 to 7: “Definitely fake” [1] to “Definitely real” [7], “Very unreliable” [1] to “Very reliable” [7],  “Extremely unlikely” [1] to “Extremely likely” [7], “Extremely unbelievable” [1] to “Extremely believable” [7]; 1 to 6: “Extremely inaccurate” [1] to “Extremely accurate” [6], “Completely false” [1] to “Completely true” [6]). Yet, we coded the most common scale, a 4-point Likert scale ([1] not at all accurate, [2] not very accurate, [3] somewhat accurate, [4] very accurate), as not perfectly symmetrical. accounting for xx% of the non-perfectly symmetrical scales. We coded two other Likert scales as not perfectly symmetrical (“not at all trustworthy” [1] to “very trustworthy” [10]; “not at all” [1] to “very” [7]). 
+Perfectly symmetrical scales include all binary scales (e.g. "True" or "False", "Real" or "Fake", is accurate "Yes" or "No", is accurate and unbiased "Yes" or "No"), and most Likert-scales (1 to 7: "Definitely fake" [1] to "Definitely real" [7], "Very unreliable" [1] to "Very reliable" [7], "Extremely unlikely" [1] to "Extremely likely" [7], "Extremely unbelievable" [1] to "Extremely believable" [7]; 1 to 6: "Extremely inaccurate" [1] to "Extremely accurate" [6], "Completely false" [1] to "Completely true" [6]). Yet, we coded the most common scale, a 4-point Likert scale ([1] not at all accurate, [2] not very accurate, [3] somewhat accurate, [4] very accurate), as not perfectly symmetrical. We coded two other Likert scales as not perfectly symmetrical ("not at all trustworthy" [1] to "very trustworthy" [10]; "not at all" [1] to "very" [7]).
 
-Third, we investigated whether H1 and H2 hold for both perfectly symmetrical and imperfectly symmetrical scales. While both H1 and H2 hold for both symmetry types, we found that studies with perfectly symmetric scales tend to yield lower discernment scores ($\Delta$ Discernment = `r list_moderators_accuracy$Symmetrie$perfect_symetryTRUE$estimate` `r list_moderators_accuracy$Symmetrie$perfect_symetryTRUE$ci`) than studies relying on scales that are at least slightly asymmetric (Baseline discernment slightly asymmetric scales = `r list_moderators_accuracy$Symmetrie$intercept$estimate` `r list_moderators_accuracy$Symmetrie$intercept$ci`). We do not find a difference regarding response bias. 
+Third, we investigated whether H1 and H2 hold for both perfectly symmetrical and imperfectly symmetrical scales. While both H1 and H2 hold for both symmetry types, we found that studies with perfectly symmetric scales tend to yield lower discernment scores ($\Delta$ Discernment = `r list_moderators_accuracy$Symmetrie$perfect_symetryTRUE$estimate` `r list_moderators_accuracy$Symmetrie$perfect_symetryTRUE$ci`) than studies relying on scales that are at least slightly asymmetric (Baseline discernment slightly asymmetric scales = `r list_moderators_accuracy$Symmetrie$intercept$estimate` `r list_moderators_accuracy$Symmetrie$intercept$ci`). We do not find a difference regarding response bias.
 
-The results suggest that imperfectly symmetrical scales may inflate discernment. However, the symmetry of response scales was not a factor that was experimentally manipulated, and the studies we compare in our model differ in many other ways and the observed difference is likely to be confounded by those factors. 
+The results suggest that imperfectly symmetrical scales may inflate discernment. However, the symmetry of response scales was not a factor that was experimentally manipulated, and the studies we compare in our model differ in many other ways and the observed difference is likely confounded.
 
 #### Proportion of true news
 
-Most studies exposed participants to 50% of false news and 50% of true news, whereas outside of experimental settings, people on average are exposed to much more true news than false news [REF]. This inflated proportion of false news may increase discernment or make participants more skeptical of true news. Empirical evidence suggests that the ratio of false news has no effect on discernment and slightly increased skepticism in news judgement [REF]. Figure \@ref(fig:share-true) shows effect sizes for discernment and response bias as a function of news ratio. Due to the very uneven number of effect sizes, it does not seem reasonable to run a meta-regression to test this. However, Fig. \@ref(fig:share-true) suggests no obvious trend with regard to the share of true news ratio. Besides as for the other moderator variables, any observed association is likely to be confounded by other factors.
+Most studies exposed participants to 50% of false news and 50% of true news, whereas outside of experimental settings, people on average are exposed to much more true news than false news [@altayQuantifyingInfodemicPeople2022]. This inflated proportion of false news may increase discernment or make participants more skeptical of true news. Empirical evidence suggests that the ratio of false news has no effect on discernment and slightly increases skepticism in news judgment [@altayExposureHigherRates2023]. Figure \@ref(fig:share-true) shows effect sizes for discernment and response bias as a function of news ratio. Due to the very uneven number of effect sizes, it does not seem reasonable to run a meta-regression to test this. However, Fig. \@ref(fig:share-true) suggests no obvious trend with regard to the share of true news ratio. Besides, as for the other moderator variables, any observed association is likely to be confounded by other factors.
 
-```{r share-true}
+(ref:share-true) Effect sizes plotted by their share of true news among all news that an individual participant saw.
+
+```{r share-true, fig.cap="(ref:share-true)"}
 share_true_discernment <- plot_share_true(data = accuracy_effect, name = "Discernment")
 share_true_bias <- plot_share_true(data = error_effect, name = "Response bias")
 
@@ -86,4 +88,3 @@ ggarrange(share_true_discernment,
                   axis.ticks.y = element_blank()))
 
 ```
-

@@ -1,6 +1,9 @@
 # Binary vs. continuous scales {#binary}
 
-Some of the studies included in our review measure perceived accuracy on a continuous scale, others on a binary (or dichotomous) scale. This is not problematic per se - there are [statistical methods to to be able to compare effects on both scales](https://training.cochrane.org/handbook/current/chapter-10#section-10-6) [@higgins_cochrane_2019]. These require, however, appropriate summary statistics for both scales. For continuous measures, means and standard deviations are fine; for binary measures we would need odds or risk ratios, for example. The problem we were facing is that authors did not provide the appropriate summary statistics for binary scales. Instead, they report means and standard deviations, just as they do for continuous outcomes. For the main analysis, we made the decision to treat continuous and binary scales in the same way, glossing over potential biases from inappropriate summary statistics. Here, we include two of robustness checks to see how this decision affects our results. First, we ran meta-regression to see if there are any differences regarding our outcome variables associated with type of scale (continuous vs. binary). This analysis suggests that there is a difference regarding response bias between studies using binary and continuous scales (smaller bias for binary scales). Second, we focus on the subset of studies that we have individual-level data on. For this subset, we combine binary and continuous response scales by collapsing the latter on a binary outcome. We calculate appropriate effect sizes for binary data, namely log odds ratios (logORs) and run a meta-analysis on those effect sizes. The results are in line with our main findings, suggesting positive discernment and response bias. 
+\FloatBarrier  
+
+Some of the studies included in our review measure perceived accuracy on a continuous scale, others on a binary (or dichotomous) scale. This is not problematic per se - there are [statistical methods to compare effects on both scales](https://training.cochrane.org/handbook/current/chapter-10#section-10-6) [@higgins_cochrane_2019]. These require, however, appropriate summary statistics for both scales. For continuous measures, means and standard deviations are fine; for binary measures we would need, for example, odds or risk ratios. The problem we were facing is that authors did not provide the appropriate summary statistics for binary scales. Instead, they tended to report means and standard deviations, just as they do for continuous outcomes. For the main analysis, we made the decision to treat continuous and binary scales in the same way, glossing over potential biases from inappropriate summary statistics. 
+Here, we include robustness checks to see how this decision affects our results. First, we ran meta-regression to see if there are any differences regarding our outcome variables associated with type of scale (continuous vs. binary). This analysis suggests that there is a difference regarding response bias between studies using binary and continuous scales (smaller bias for binary scales). Second, we focus on the subset of studies that we have individual-level data on. For this subset, we combine binary and continuous response scales by collapsing the latter on a binary outcome. We calculate appropriate effect sizes for binary data, namely log odds ratios (logORs) and run a meta-analysis on those effect sizes. The results are in line with our main findings, suggesting positive discernment and response bias. 
 
 ## Meta-regression
 
@@ -104,9 +107,9 @@ modelsummary::modelsummary(list("Discernment" = scales_comparison_discernment,
                            )
 ```
 
-## Individual-level binary data
+## Individual-level data
 
-Here, we focus on binary studies, and more precisely on on those binary studies that we have raw data on. For this set of binary studies, we first calculated the odds ratios from the raw data^[A general overview of appropriate summary statistics for binary outcomes can be found here(@higgins_cochrane_2019): https://training.cochrane.org/handbook/current/chapter-06#section-6-4)]. We then ran a meta-analysis on the odds ratios.
+Here, we focus on the subset of studies that we have raw, individual-level data on. For this subset of studies, we first calculated the odds ratios from the raw data^[A general overview of appropriate summary statistics for binary outcomes can be found here(@higgins_cochrane_2019): https://training.cochrane.org/handbook/current/chapter-06#section-6-4)]. We then ran a meta-analysis on the odds ratios.
 
 ```{r, message=FALSE}
 # Step 1: extract `unique_sample_id` for samples with binary outcomes that 
@@ -140,24 +143,24 @@ reduced_error_effect <- reduce_binary_samples(error_effect)
 
 ### Odds ratios 
 
-The 'odds' refer to the ratio of the probability that a particular event will occur to the probability that it will not occur, and can be any number between zero and infinity (@higgins_cochrane_2019). It is commonly expressed as a ratio of two integers. For example, in a clinical context, 1 out of 100 patients might die; then the odds of dying are `0.01`, or `1:100`.
+The 'odds' refer to the ratio of the probability that a particular event will occur to the probability that it will not occur, and can be any number between zero and infinity [@higgins_cochrane_2019]. It is commonly expressed as a ratio of two integers. For example, in a clinical context, 1 out of 100 patients might die; then the odds of dying are `0.01`, or `1:100`.
 
 The odds *ratio* (OR) is the ratio of the Odds. The odds ratio that characterizes discernment is calculated as
 
 $$
-OR_{Accuracy} = \frac{(Accurate_{true}/ NotAccurate_{true})}{(Accurate_{fake}/ NotAccurate_{fake})}
+OR_{Accuracy} = \frac{(Accurate_{true}/ NotAccurate_{true})}{(Accurate_{false}/ NotAccurate_{false})}
 $$
 
-If the OR is `1`, participants were just as likely to rate items as 'accurate' when looking at `true` news as they were when looking at `fake` news. If the OR is `> 1`, then participants rated true news as more accurate than fake news. An OR of `2` means that participants were twice as likely to rate true news as accurate compared to fake news.
+If the OR is `1`, participants were just as likely to rate items as 'accurate' when looking at true news as they were when looking at false news. If the OR is `> 1`, then participants rated true news as more accurate than fake news. An OR of `2` means that participants were twice as likely to rate true news as accurate compared to false news.
 
 The OR for response bias is calculated as
 
 $$
-OR_{Error} = \frac{(NotAccurate_{true}/Accurate_{true})}{(Accurate_{fake}/NotAccurate_{fake})} \leavevmode \newline
-= \frac{\frac{1}{(NotAccurate_{true}/Accurate_{true})}}{(Accurate_{fake}/NotAccurate_{fake})} \leavevmode \newline
+OR_{Error} = \frac{(NotAccurate_{true}/Accurate_{true})}{(Accurate_{false}/NotAccurate_{false})} \leavevmode \newline
+= \frac{\frac{1}{(NotAccurate_{true}/Accurate_{true})}}{(Accurate_{false}/NotAccurate_{false})} \leavevmode \newline
 = \frac{1}{OR_{Accuracy}}
 $$
-For our analysis, we calculated the odds ratio (OR) for both accuracy and error. More precisely, we expressed the OR on a logarithmic scale, also referred to as "log odds ratio"(logOR). As for odds ratios, if the *log* odds ratio is positive, it indicates positve discernment/response bias^[To interpret the magnitude of that difference we have to transform the logarithmic estimate back to a normal odds ratio. The reason we use the log odds ratios in the first place is that which makes outcome measures symmetric around 0 and results in corresponding sampling distributions that are closer to normality [@viechtbauer_conducting_2010] ].
+For our analysis, we calculated the odds ratio (OR) for both accuracy and error. More precisely, we expressed the OR on a logarithmic scale, also referred to as "log odds ratio"(logOR). As for odds ratios, if the log odds ratio is positive, it indicates positive discernment/response bias^[To interpret the magnitude of that difference we have to transform the logarithmic estimate back to a normal odds ratio. The reason we use the log odds ratios in the first place is that which makes outcome measures symmetric around 0 and results in corresponding sampling distributions that are closer to normality [@viechtbauer_conducting_2010] ].
 
 Table \@ref(tab:frequency) shows the frequency of answers by veracity.
 
@@ -217,7 +220,7 @@ colnames(descriptive_binary) <- new_names
 
 # summary table
 apa_table(descriptive_binary , 
-      note = "Frequency of responses (among indiviual-level studies with binary response scales)") 
+      note = "Frequency of responses (among individual-level studies with binary response scales)") 
 
 ```
 
@@ -282,7 +285,7 @@ odds_ratios_error_all <- calculate_OR(individual_level_subset,
 
 ### Meta-analysis 
 
-We ran a meta-regression on the the odds ratios. The results can be found in Table \@ref(tab:meta-odds). For reference, we also present the results for that subset using the main analysis estimator (SMCC) and a non-standardized estimator that likewise accounts for dependence between fake and true news, namely the mean change (MC)^[We use the term mean change in line with vocabulary used by the metafor package and its `escalc()` function that we use for all effect size calculations. It is in fact a simple mean difference but one that accounts for the correlation between true and fake news in the calculation of the standard error (see @higgins_cochrane_2019). Here is a direct link to the relevant chapter online: https://training.cochrane.org/handbook/current/chapter-23#section-23-2-7-1]. The results suggests that when using odds ratios, we do not find a statistically significant response bias. However, this analysis relies on very few observations (6 effect sizes only), hence low statistical power to detect a potential effect. We therefor extended the analysis by adding also individual-level studies with continuous response scales, collapsing responses to a binary outcome. For example, on a 4-point scale, we coded responses of 1 and 2 as not accurate (0) and 3 and 4 as accurate (1). For scales, with a mid-point (example 3 on a 5-point scale), we coded midpoint answers as NA. The results of this extended analysis can be found in table \@ref(tab:meta-odds-extended). In line with our main results, this extended analysis suggests a positive response bias.
+We ran a meta-regression on the odds ratios. The results can be found in Table \@ref(tab:meta-odds). For reference, we also present the results for that subset using the main analysis estimator (SMCC) and a non-standardized estimator that likewise accounts for dependence between false and true news, namely the mean change (MC)^[We use the term mean change in line with vocabulary used by the metafor package and its `escalc()` function that we use for all effect size calculations. It is in fact a simple mean difference but one that accounts for the correlation between true and false news in the calculation of the standard error (see @higgins_cochrane_2019). Here is a direct link to the relevant chapter online: https://training.cochrane.org/handbook/current/chapter-23#section-23-2-7-1]. The results suggest that when using odds ratios, we do not find a statistically significant response bias. However, this analysis relies on very few observations (6 effect sizes only), hence low statistical power to detect a potential effect. We therefore extended the analysis by adding also individual-level studies with continuous response scales and collapsing ratings to a binary outcome. For example, on a 4-point scale, we coded responses of 1 and 2 as not accurate (0) and 3 and 4 as accurate (1). For scales, with a mid-point (example 3 on a 5-point scale), we coded midpoint answers as NA. The results of this extended analysis can be found in table \@ref(tab:meta-odds-extended). In line with our main results, this extended analysis suggests a positive response bias.
 
 ```{r}
 compare_OR <- function(subset = "binary"){
@@ -371,19 +374,19 @@ model_OR_error <- comparison_binary[[2]]
 modelsummary::modelsummary(comparison_binary,
                            title = 'Individual-level studies with binary response scale', 
                            stars = TRUE, 
-                           coef_rename = c("overall" = "True news (compared to fake)")
-) #%>% 
-  # add_header_above(c(" " = 1, 
-  #                    "Outcome: Log OR" = 2, 
-  #                    "Outcome: SMCC" = 2,
-  #                    "Outcome: MC" = 2),
-  #                  ) %>%
-  # add_header_above(c(" " = 1, "(based on individual data)" = 2, "(based on meta data)"= 4), 
-  #                  line = FALSE, italic = TRUE) %>% 
-  # footnote(general = "Note that the number of observations differ, because some samples provide several effect sizes in the meta-data. For the odds ratios based on the individual data, however, we calculated only one average effect size per sample. The samples are only from studies with binary response scales that we had raw, individual-level data on.", 
-  #          threeparttable = TRUE) %>% 
-  # # make smaller to fit
-  # kable_styling(latex_options = "scale_down")
+                           coef_rename = c("overall" = "Estimate")
+) %>% 
+  add_header_above(c(" " = 1,
+                     "Outcome: Log OR" = 2,
+                     "Outcome: SMCC" = 2,
+                     "Outcome: MC" = 2),
+                   ) %>%
+  add_header_above(c(" " = 1, "(based on individual data)" = 2, "(based on meta data)"= 4),
+                   line = FALSE, italic = TRUE) %>%
+  footnote(general = "Note that the number of observations differ, because some samples provide several effect sizes in the meta-data. For the odds ratios based on the individual data, however, we calculated only one average effect size per sample. The samples are only from studies with binary response scales that we had raw, individual-level data on.",
+           threeparttable = TRUE) %>%
+  # make smaller to fit
+  kable_styling(latex_options = "scale_down")
 ```
 
 ```{r meta-odds-extended}
@@ -394,21 +397,21 @@ model_OR_accuracy <- comparison_binary[[1]]
 model_OR_error <- comparison_binary[[2]]
 
 modelsummary::modelsummary(comparison_binary,
-                           title = 'Individual-level studies with binary response scale', 
+                           title = 'Individual-level studies with likert scale ratings collapsed to binary outcome', 
                            stars = TRUE, 
-                           coef_rename = c("overall" = "True news (compared to fake)"),
+                           coef_rename = c("overall" = "Estimate"),
                            escape = TRUE
-) #%>% 
-  # add_header_above(c(" " = 1, 
-  #                    "Outcome: Log OR" = 2, 
-  #                    "Outcome: SMCC" = 2,
-  #                    "Outcome: MC" = 2),
-  #                  ) %>%
-  # add_header_above(c(" " = 1, "(based on individual data)" = 2, "(based on meta data)"= 4), 
-  #                  line = FALSE, italic = TRUE) %>% 
-  # footnote(general = "Note that the number of observations differ, because some samples provide several effect sizes in the meta-data. For the odds ratios based on the individual data, however, we calculated only one average effect size per sample. The sample consists of all studies we had individual-level data on. For individual-level studies with continuous response scales, we computed the odds ratio after collapsing responses to a binary outcome.", threeparttable = TRUE) %>% 
-  # # make smaller to fit
-  # kable_styling(latex_options = "scale_down")
+) %>% 
+  add_header_above(c(" " = 1,
+                     "Outcome: Log OR" = 2,
+                     "Outcome: SMCC" = 2,
+                     "Outcome: MC" = 2),
+                   ) %>%
+  add_header_above(c(" " = 1, "(based on individual data)" = 2, "(based on meta data)"= 4),
+                   line = FALSE, italic = TRUE) %>%
+  footnote(general = "Note that the number of observations differ, because some samples provide several effect sizes in the meta-data. For the odds ratios based on the individual data, however, we calculated only one average effect size per sample. The sample consists of all studies we had individual-level data on. For individual-level studies with continuous response scales, we computed the odds ratio after collapsing responses to a binary outcome.", threeparttable = TRUE) %>%
+  # make smaller to fit
+  kable_styling(latex_options = "scale_down")
 ```
 
 
