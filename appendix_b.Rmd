@@ -4,29 +4,50 @@
 
 All moderator analyses, with the exception of political concordance, only reveal statistical associations, not causal effects, because the moderator variables vary mostly between studies: For example, some studies provided news sources, while others did not. But these studies differ in many other ways, all of which potentially confound any observed association.
 
-Table \@ref(tab:moderators) shows the results of the different meta regressions by moderator variable. Figures \@ref(fig:moderators-discernment) and \@ref(fig:moderators-bias) visualize those results by showing the distribution of effect sizes by moderator variable.
+Table \@ref(tab:moderators-discernment-table) shows the results of the different meta regressions by moderator variable on discernment and Table \@ref(tab:moderators-bias-table) on response bias. Figures \@ref(fig:moderators-discernment) and \@ref(fig:moderators-bias) visualize those results by showing the distribution of effect sizes by moderator variable.
 
-```{r moderators}
+```{r moderators-discernment-table}
 # display models
-modelsummary::modelsummary(c(moderator_models_accuracy, moderator_models_error), 
-                           title = 'Moderator effects (outcome SMCC)', 
-                           stars = TRUE, 
-                           coef_rename = c("country_groupedUS" = "Country: US (vs. nonUS)", 
+modelsummary::modelsummary(moderator_models_accuracy,
+                           title = 'Moderator effects on Discernment',
+                           stars = TRUE,
+                           coef_rename = c("country_groupedUS" = "Country: US (vs. nonUS)",
                                            "political_concordancediscordant" = "Political Concordance : Discordant (vs. Concordant)",
-                                           "news_family_groupedother" = "News family: Other (vs. Covid)", 
+                                           "news_family_groupedother" = "News family: Other (vs. Covid)",
                                            "news_family_groupedpolitical" = "News family: Political (vs. Covid)",
                                            "news_format_groupedheadline_picture" = "News Format: Headline & Picture (vs. Headline)",
                                            "news_format_groupedheadline_picture_lede" = "News Format: Headline, Picture & Lede (vs. Headline)",
-                                           "news_sourceTRUE" = "News source: Source (vs. No source)", 
+                                           "news_sourceTRUE" = "News source: Source (vs. No source)",
                                            "accuracy_scale_grouped6" = "Accuracy Scale: 6 (vs. 4)",
                                            "accuracy_scale_grouped7" = "Accuracy Scale: 7 (vs. 4)",
                                            "accuracy_scale_groupedbinary" = "Accuracy Scale: binary (vs. 4)",
-                                           "accuracy_scale_groupedother" = "Accuracy Scale: other (vs. 4)"
+                                           "accuracy_scale_groupedother" = "Accuracy Scale: other (vs. 4)",
+                                           "perfect_symetryTRUE" = "Symmetrie: perfect (vs. imperfect)"
                                            )
                            ) %>%
-  add_header_above(c(" " = 1, "Outcome: Accuracy" = 8, "Outcome: Error" = 8)) %>%
-  # rotate 90 degrees since massive table
-  kableExtra::landscape() %>%
+  # make smaller to fit
+  kable_styling(latex_options = "scale_down")
+```
+
+```{r moderators-bias-table}
+# display models
+modelsummary::modelsummary(moderator_models_error,
+                           title = 'Moderator effects on Response bias',
+                           stars = TRUE,
+                           coef_rename = c("country_groupedUS" = "Country: US (vs. nonUS)",
+                                           "political_concordancediscordant" = "Political Concordance : Discordant (vs. Concordant)",
+                                           "news_family_groupedother" = "News family: Other (vs. Covid)",
+                                           "news_family_groupedpolitical" = "News family: Political (vs. Covid)",
+                                           "news_format_groupedheadline_picture" = "News Format: Headline & Picture (vs. Headline)",
+                                           "news_format_groupedheadline_picture_lede" = "News Format: Headline, Picture & Lede (vs. Headline)",
+                                           "news_sourceTRUE" = "News source: Source (vs. No source)",
+                                           "accuracy_scale_grouped6" = "Accuracy Scale: 6 (vs. 4)",
+                                           "accuracy_scale_grouped7" = "Accuracy Scale: 7 (vs. 4)",
+                                           "accuracy_scale_groupedbinary" = "Accuracy Scale: binary (vs. 4)",
+                                           "accuracy_scale_groupedother" = "Accuracy Scale: other (vs. 4)",
+                                           "perfect_symetryTRUE" = "Symmetrie: perfect (vs. imperfect)"
+                                           )
+                           ) %>%
   # make smaller to fit
   kable_styling(latex_options = "scale_down")
 ```
