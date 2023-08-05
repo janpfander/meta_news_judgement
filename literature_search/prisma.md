@@ -299,3 +299,10 @@ prisma %>% print(n = 30)
 write_csv(prisma, "prisma.csv")
 ```
 
+## Export list of included studies
+
+
+```r
+write_csv(included, "included.csv")
+```
+
