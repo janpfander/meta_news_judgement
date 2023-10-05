@@ -1,6 +1,6 @@
 ---
-title             : "Spotting False News and Doubting True News: A Meta-Analysis of News Judgements"
-shorttitle        : "A Meta-Analysis of News Judgements"
+title             : "Spotting False News and Doubting True News: A Meta-Analysis of News Judgments"
+shorttitle        : "A Meta-Analysis of News Judgments"
 
 header-includes:  | # to prevent floats from moving past certain points (for the appendix)
   \usepackage{placeins} 
@@ -477,7 +477,7 @@ While many fear that people are exposed to too much misinformation, too easily f
 
 **H2: People are better at rating false news as false than true news as true.**
 
-Finally, we investigated potential moderators of H1 and H2, such as the country where the experiment was conducted, the format of the news headlines, the topic, whether the source of the news was displayed, and political concordance of the news. Past work has suggested that displaying the source of the news has a small effect at best on accuracy ratings [@diasEmphasizingPublishersDoes2020], whereas little work has investigated differences in news judgements across countries, topics, and format. The effect of political concordance on news judgements is debated. Participants may be motivated to believe politically congruent (true and false) news, motivated to disbelieve politically incongruent news, or not be politically motivated at all but still display such biases [@tappinBayesianBiasedAnalytic2020]. We formulated research questions instead of hypotheses for our moderator analyses because of a lack of strong theoretical expectations.
+Finally, we investigated potential moderators of H1 and H2, such as the country where the experiment was conducted, the format of the news headlines, the topic, whether the source of the news was displayed, and political concordance of the news. Past work has suggested that displaying the source of the news has a small effect at best on accuracy ratings [@diasEmphasizingPublishersDoes2020], whereas little work has investigated differences in news judgments across countries, topics, and format. The effect of political concordance on news judgments is debated. Participants may be motivated to believe politically congruent (true and false) news, motivated to disbelieve politically incongruent news, or not be politically motivated at all but still display such biases [@tappinBayesianBiasedAnalytic2020]. We formulated research questions instead of hypotheses for our moderator analyses because of a lack of strong theoretical expectations.
 
 ## The present study
 
@@ -553,7 +553,7 @@ forest.rma(robust_model_accuracy,
        ylim = c(-22, 250), 
        addfit = FALSE, 
        xlab = "Discernment") 
-addpoly(robust_model_accuracy, row = -20) 
+addpoly(robust_model_accuracy, mlab=" ", cex = 0.6, row = -20) 
 abline(h=0)
 # Add the text to the right-hand side of the polygon
 text(x = list_model_accuracy$overall$estimate + 0.1, 
@@ -586,7 +586,7 @@ forest.rma(robust_model_error,
        ylim = c(-22, 250), 
        addfit = FALSE, 
        xlab = "Skepticism bias")  
-addpoly(robust_model_error, row = -20)  
+addpoly(robust_model_error, mlab=" ", cex = 0.6, row = -20)  
 abline(h=0) 
 # Add the text to the right-hand side of the polygon
 text(x = list_model_error$overall$estimate + 0.1, 
@@ -817,7 +817,7 @@ In conclusion, we found that in experimental settings, people are able to discer
 
 ## Data
 
-We undertook a systematic review and meta-analysis of the experimental literature on accuracy judgements of news, following the PRISMA guidelines [@page2021]. All records resulting from our literature searches can be found on the [OSF project page](https://osf.io/96zbp/). We documented rejection decisions for all retrieved papers. They, too, can be found on the [OSF project page](https://osf.io/96zbp/).
+We undertook a systematic review and meta-analysis of the experimental literature on accuracy judgments of news, following the PRISMA guidelines [@page2021]. All records resulting from our literature searches can be found on the [OSF project page](https://osf.io/96zbp/). We documented rejection decisions for all retrieved papers. They, too, can be found on the [OSF project page](https://osf.io/96zbp/).
 
 (ref:prisma-flowchart) 2020 PRISMA flow diagram for new systematic reviews.
 
@@ -847,7 +847,7 @@ We pre-registered standardized mean changes using change score standardization (
 
 ### Outcomes
 
-We have two complementary measures of assessing the quality of people's news judgment. The first measure is discernment. It measures the overall quality of news judgment across true and false news. We calculate discernment by subtracting the mean accuracy ratings of false news from the mean accuracy ratings of true news, such that more positive scores indicate better discernment. However, discernment is a limited diagnostic of the quality of people's news judgment. Imagine a study A in which participants rate 50% of true news and 20% of false news as accurate, and a study B finding 80% of true news and 50% of false news rated as accurate. In both cases, the discernment is the same: Participants rated true news as more accurate by 30 percentage points than false news. However, the performance by news type is very different. In study A, people do well for false news - they only mistakenly classify 20% as accurate - but are at chance for true news. In study B, it's the opposite. We therefore use a second measure: skepticism  bias. For any given level of discernment, it indicates whether people's judgements were better on true news or on false news, and to what extent. First, we calculate an error for false and true news separately, which we define as the distance of participants' actual ratings to the best possible ratings. For example, for study A, the mean error for true news is 50% (100%-50%), because in the best possible scenario, participants would have classified 100% of true news as true. The error for false news in Study A is 20% (20%-0%), because the best possible performance for participants would have been to classify 0% of false news as accurate. We calculate skepticism  bias by subtracting the mean error for false news from the mean error for true news. For example, for Study A, the skepticism  bias is 30% (50%-20%). A positive skepticism  bias indicates that people doubt true news more than they believe false news.
+We have two complementary measures of assessing the quality of people's news judgment. The first measure is discernment. It measures the overall quality of news judgment across true and false news. We calculate discernment by subtracting the mean accuracy ratings of false news from the mean accuracy ratings of true news, such that more positive scores indicate better discernment. However, discernment is a limited diagnostic of the quality of people's news judgment. Imagine a study A in which participants rate 50% of true news and 20% of false news as accurate, and a study B finding 80% of true news and 50% of false news rated as accurate. In both cases, the discernment is the same: Participants rated true news as more accurate by 30 percentage points than false news. However, the performance by news type is very different. In study A, people do well for false news - they only mistakenly classify 20% as accurate - but are at chance for true news. In study B, it's the opposite. We therefore use a second measure: skepticism  bias. For any given level of discernment, it indicates whether people's judgments were better on true news or on false news, and to what extent. First, we calculate an error for false and true news separately, which we define as the distance of participants' actual ratings to the best possible ratings. For example, for study A, the mean error for true news is 50% (100%-50%), because in the best possible scenario, participants would have classified 100% of true news as true. The error for false news in Study A is 20% (20%-0%), because the best possible performance for participants would have been to classify 0% of false news as accurate. We calculate skepticism  bias by subtracting the mean error for false news from the mean error for true news. For example, for Study A, the skepticism  bias is 30% (50%-20%). A positive skepticism  bias indicates that people doubt true news more than they believe false news.
 
 ### Effect sizes
 
