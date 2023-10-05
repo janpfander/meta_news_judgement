@@ -6,33 +6,13 @@ header-includes:  | # to prevent floats from moving past certain points (for the
   \usepackage{placeins} 
   
 
-author: 
-  - name          : " "
-    affiliation   : "1"
-    role:         # Contributorship roles (e.g., CRediT, https://casrai.org/credit/)
-      - "Conceptualization"
-      - "Data collection"
-      - "Statistical Analyses"
-      - "Writing - Original Draft"
-      - "Writing - Review & Editing"
-  - name          : " "
-    affiliation   : "2"
-    corresponding : yes    # Define only one corresponding author
-    email         : " "
-    role:
-      - "Conceptualization"
-      - "Data collection"
-      - "Writing - Original Draft"
-      - "Writing - Review & Editing"
-      - "Supervision"
+
 
 affiliation:
   - id            : " "
     institution   : " "
   - id            : " "
     institution   : " "
-
-authornote: |
 
 abstract: |
   How good are people at judging the veracity of news? We conducted a systematic literature review and pre-registered meta-analysis of 232 effect sizes from 53 experimental articles evaluating accuracy ratings of true and false news ($N_{participants}$ = 104'064 from 30 countries across 6 continents). We found that people rated true news as more accurate than false news (Cohen’s d = 1.26, [1.13, 1.39]) and were better at rating false news as false than at rating true news as true (Cohen’s d = 0.35, [0.25, 0.44]). In other words, participants were able to discern true from false news, and erred on the side of skepticism rather than credulity. The political concordance of the news had no effect on discernment, but participants were more skeptical of politically discordant news. These findings lend support to crowdsourced fact-checking initiatives, and suggest that, to improve discernment, there is more room to increase the acceptance of true news than to reduce the acceptance of false news.
@@ -457,6 +437,8 @@ prisma <- as.list(prisma %>% pivot_wider(names_from = category, values_from = n)
 
 # How good are people at judging the veracity of news? We conducted a systematic literature review and pre-registered meta-analysis of `r descriptives$effects` effect sizes from `r descriptives$papers` experimental articles evaluating accuracy ratings of true and false news ($N_{participants}$ = `r descriptives$participants` from `r descriptives$countries` countries across `r descriptives$continents` continents). We found that people rated true news as more accurate than false news (Cohen's d = `r list_model_accuracy$overall$estimate`, `r list_model_accuracy$overall$ci`) and were better at rating false news as false than at rating true news as true (Cohen's d = `r list_model_error$overall$estimate`, `r list_model_error$overall$ci`). In other words, participants were able to discern true from false news, and erred on the side of skepticism rather than credulity. The political concordance of the news had no effect on discernment, but participants were more skeptical of politically discordant news. These findings lend support to crowdsourced fact-checking initiatives, and suggest that, to improve discernment, there is more room to increase the acceptance of true news than to reduce the acceptance of false news.
 ```
+
+\clearpage
 
 # Introduction
 
