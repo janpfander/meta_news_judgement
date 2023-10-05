@@ -20,5 +20,8 @@
 !*.Rmd
 !*.md
 
+# remove non-anonymized files
+Pfander*
+
 
 
