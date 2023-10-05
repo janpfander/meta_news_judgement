@@ -106,7 +106,7 @@ Combine the `included` and `excluded` sheet into a single `studies` data frame.
 
 ```r
 # make both sheets compatible
-included_compatible <- included %>% select(reference) %>% mutate(included = "included")
+included_compatible <- included %>% select(paperID, reference) %>% mutate(included = "included")
 
 excluded_compatible <- excluded %>% select(reference) %>% mutate(included = "excluded")
 
@@ -199,7 +199,7 @@ We add where we got summary statistics from (paper, raw data, authors). This is 
 
 ```r
 # make a data frame with source of summary stats
-statistics_source <- read_csv("../data/data.csv") %>% 
+statistics_source <- read_csv("../data/cleaned.csv") %>% 
   group_by(paperID) %>% 
   summarize(reference = unique(reference), 
             values_from = first(values_from)) %>% 
@@ -208,7 +208,7 @@ statistics_source <- read_csv("../data/data.csv") %>%
   mutate(across(reference, make_strings_more_compatible)) 
 
 # add this variable to studies data frame
-studies <- left_join(studies, statistics_source, by = "reference") %>% 
+studies <- left_join(studies, statistics_source, by = "paperID") %>% 
   # This join will assign values to partly excluded studies. 
   # We have to code these as NAs separately
   mutate(values_from = ifelse(included == "excluded", NA, values_from))
@@ -274,21 +274,21 @@ prisma %>% print(n = 30)
 ##  2 google                               980
 ##  3 overal                              4982
 ##  4 duplicates                           156
-##  5 other_methods                         36
+##  5 other_methods                         40
 ##  6 screened                            4826
-##  7 screening_excluded                  4721
-##  8 retrieval_databases                  105
+##  7 screening_excluded                  4720
+##  8 retrieval_databases                  106
 ##  9 exluded_databases                     74
 ## 10 exluded_databases_fulltext            69
 ## 11 exluded_databases_abstract             5
-## 12 retrieval_other                       36
+## 12 retrieval_other                       40
 ## 13 excluded_other                        19
-## 14 studies_included                      48
+## 14 studies_included                      53
 ## 15 studies_included_paper                20
 ## 16 studies_included_authors              12
-## 17 studies_included_data                 16
-## 18 assessed_for_elegibility_databases   105
-## 19 assessed_for_elegibility_other        36
+## 17 studies_included_data                 21
+## 18 assessed_for_elegibility_databases   106
+## 19 assessed_for_elegibility_other        40
 ## 20 not_retrieved_databases                0
 ## 21 not_retrieved_other                    0
 ```

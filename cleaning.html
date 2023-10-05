@@ -452,10 +452,12 @@ d &lt;- d %&gt;%
     # accuracy scale
     accuracy_scale_grouped = ifelse(accuracy_scale %in% c(&quot;4&quot;, &quot;binary&quot;, &quot;6&quot;, &quot;7&quot;), 
                                     accuracy_scale, &quot;other&quot;), 
-    # perfect symetrie
+    # perfect symetry
     perfect_symetry = case_when(perfect_symetry == 1 ~ TRUE,
                                 perfect_symetry == 0 ~ FALSE,
                                 TRUE ~ NA),
+    # selection fake news
+    selection_fake_news_grouped = ifelse(selection_fake_news == &quot;fact_checking&quot;, &quot;fact check sites&quot;, &quot;identified by researchers&quot;),
     # for multilevel models, later , we want to identify all observations
     # (i.e. the individual effect sizes) of our data 
     observation_id = 1:nrow(.)

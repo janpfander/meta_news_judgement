@@ -85,7 +85,7 @@ Combine the `included` and `excluded` sheet into a single `studies` data frame.
 
 ```{r}
 # make both sheets compatible
-included_compatible <- included %>% select(reference) %>% mutate(included = "included")
+included_compatible <- included %>% select(paperID, reference) %>% mutate(included = "included")
 
 excluded_compatible <- excluded %>% select(reference) %>% mutate(included = "excluded")
 
@@ -175,7 +175,7 @@ We add where we got summary statistics from (paper, raw data, authors). This is 
 
 ```{r, message=FALSE}
 # make a data frame with source of summary stats
-statistics_source <- read_csv("../data/data.csv") %>% 
+statistics_source <- read_csv("../data/cleaned.csv") %>% 
   group_by(paperID) %>% 
   summarize(reference = unique(reference), 
             values_from = first(values_from)) %>% 
@@ -184,7 +184,7 @@ statistics_source <- read_csv("../data/data.csv") %>%
   mutate(across(reference, make_strings_more_compatible)) 
 
 # add this variable to studies data frame
-studies <- left_join(studies, statistics_source, by = "reference") %>% 
+studies <- left_join(studies, statistics_source, by = "paperID") %>% 
   # This join will assign values to partly excluded studies. 
   # We have to code these as NAs separately
   mutate(values_from = ifelse(included == "excluded", NA, values_from))

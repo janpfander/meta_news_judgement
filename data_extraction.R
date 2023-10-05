@@ -186,12 +186,6 @@ d <- read_sav("./data_from_papers/initial ratings exp 2 data.sav")
 summary(d$pol_ideology )
 table(d$pol_party) 
 
-# try ro replicate table 2 in paper first
-d %>% 
-  group_by(rating, familiar, veracity) %>% 
-  summarise(across(accuracy, list(mean = mean, sd = sd))
-  ) # matches table 2
-
 # do some re-coding 
 d <- d %>% 
   mutate (id = 1:nrow(.)) %>% 
@@ -1292,10 +1286,7 @@ d %>%
     # news subject
     theme) %>% 
   group_by(true_story, theme) %>% 
-  get_summary_stats(response, type = "mean_sd") %>% 
-  # take into account
-  mutate(n = n_observations, 
-         n_participants = n_observations / 16)
+  get_summary_stats(response, type = "mean_sd") 
 
 
 ## Study 2
@@ -1729,23 +1720,331 @@ d %>% group_by(Condition, Veracity) %>%
   summarise(across(Accuracy, list(mean = mean, sd = sd), na.rm=TRUE), 
             n_subj = n_distinct(ResponseId))
 
+# Hoes-Altay-Angelis 2023
+d <- read_excel("./data_from_papers/Hoes-Altay-Angelis_data_clean.xlsx")
+names(d)
+
+# levels condition
+levels(as.factor(d$Condition))
+# levels veracity
+levels(as.factor(d$Veracity))
+
+# beyond condition, proportion has been manipulated
+levels(as.factor(d$Proportion))
+
+# summary stats 
+d %>% 
+  mutate(Proportion = case_when(Proportion == "balanced" ~ 0.5, 
+                                Proportion == "true" ~ 0.75, 
+                                Proportion == "false" ~ 0.25,
+                                )
+         ) %>% 
+  group_by(Condition, Proportion, Veracity) %>% 
+  summarise(across(Ratings, list(mean = mean, sd = sd), na.rm=TRUE), 
+            n_subj = n_distinct(PROLIFIC_PID)) %>% 
+  print(n = 30)
 
 
+# Altay-Gilardi 2023
+d <- read_excel("./data_from_papers/Altay-Gilardi_data_long_clean.xlsx")
+names(d)
+
+# levels condition
+levels(as.factor(d$Condition))
+# levels veracity
+levels(as.factor(d$True_False))
+
+# long format data, `Ratings` codes the outcome for both sharing and accuracy, 
+# so we have to filter DV == Accuracy. 
+# Also, remove some treatment conditions that are irrelevant for our study
+d <- d %>% 
+  filter(DV == "Accuracy" & 
+           Conditions %in% c("Control", "FalseLabel"))
+
+# summary stats 
+d %>% group_by(Condition, True_False) %>% 
+  summarise(across(Ratings, list(mean = mean, sd = sd), na.rm=TRUE), 
+            n_subj = n_distinct(PROLIFIC_PID))
+
+# Espina Mairal, S., Bustos, F., Solovey, G., & Navajas, J. (2023). 
+# Interactive crowdsourcing to fact-check politicians. 
+# Journal of Experimental Psychology: Applied. 
+# https://doi.org/10.1037/xap0000492
+
+# Study 1
+d <- read_csv("./data_from_papers/mairal_database.csv")
+names(d)
+
+# Thanks to their codebook (great documentation!), we know that `answer_chequeado`
+# codes veracity and that `answer_1` is the original answer (before any manipulation).
+# Since participant's initial rating happened under the same (unmanipulated) 
+# circumstances for each condition, we consider them all as control. The `control` 
+# variable is thus not relevant for us. 
 
 
+# inspect key variables to get an overview
+d %>% 
+  select(id_subject, control, answer_chequeado, phrase_sign, subject_type, answer_1, 
+         phrase_concordant) %>% 
+  arrange(id_subject) 
 
+# summary stats 
+d %>%
+  mutate(accuracy = ifelse(answer_1 == "V", 1, 0), 
+         veracity = ifelse(answer_chequeado == "V", "true", "fake"),
+         concordance = ifelse(phrase_concordant == 1, "concordant", "discordant")
+         ) %>% 
+  group_by(concordance, veracity) %>% 
+  summarise(across(accuracy, list(mean = mean, sd = sd), na.rm=TRUE), 
+            n_subj = n_distinct(id_subject))
 
+# Study 2
+d <- read_csv("./data_from_papers/mairal_database_study2.csv")
+names(d)
 
+# summary stats 
+d %>%
+  mutate(accuracy = ifelse(answer_1 == "V", 1, 0), 
+         veracity = ifelse(answer_chequeado == "V", "true", "fake"),
+         concordance = ifelse(phrase_concordant == 1, "concordant", "discordant")
+  ) %>% 
+  group_by(concordance, veracity) %>% 
+  summarise(across(accuracy, list(mean = mean, sd = sd), na.rm=TRUE), 
+            n_subj = n_distinct(id_subject))
 
   
+# Gawronski, B., Ng, N. L., & Luke, D. M. (2023). 
+# Truth sensitivity and partisan bias in responses to misinformation. 
+# Journal of Experimental Psychology: General, 152(8), 2205–2236. 
+# https://doi.org/10.1037/xge0001381
+
+# Experiment 1
+
+d <- read_sav("./data_from_papers/Gawronski-Experiment1.sav")
+names(d)
+
+# No codebook available, but we get variable names and answer codes from the 
+# supplemental material with the original survey.
+# Data in wide format. 
+# For the rating variables (Pro..._S/T), 
+# S indicates that participants were assigned to "Sharing" condition and T 
+# to accuracy (or Truth) judgement. 
+# We know that for the Political identification variable `PO_Part`, 1 == Republican
+# and 2 == Democrat
+
+d <- d %>% 
+  # remove failed attention checks (according to paper)
+  filter(is.na(Attn)) %>% 
+  # restrict to key variables
+  select(ResponseId, PO_Part, starts_with("Pro")) %>% 
+  # bring into long format and separate variables
+  pivot_longer(ProDemReal_01_T:ProRepFake_15_S,
+               names_to = "SlantVeracity_number_condition", 
+               values_to = "outcome") %>% 
+  separate_wider_delim(SlantVeracity_number_condition, delim = "_", 
+                       names = c("SlantVeracity", "number", "condition")) %>% 
+  separate_wider_position(SlantVeracity, c(slant = 6, veracity = 4)) %>% 
+  # add a headline id
+  arrange(ResponseId) %>% 
+  mutate(headline_id = rep(1:60, nrow(.)/60)) %>% 
+  # get only accuracy rating participants (not sharing once)
+  filter(condition == "T") %>% 
+  rename(accuracy = outcome) %>% 
+  group_by(ResponseId) %>% 
+  mutate(na_count = sum(is.na(accuracy))) %>%
+  filter(na_count != 60) %>%
+  ungroup() %>% 
+  mutate(
+    # Make nicer political identity variable
+    political_identity = ifelse(PO_Part == 1, "ProRep", "ProDem"), 
+    # Make concordance variable
+    concordance = ifelse(political_identity == slant, "concordant", "discordant")
+  ) 
+  
+# summary data
+d %>% 
+  group_by(concordance, veracity) %>% 
+  summarise(across(accuracy, list(mean = mean, sd = sd), na.rm=TRUE), 
+            n_subj = n_distinct(ResponseId))
+
+# Experiment 4
+
+d <- read_sav("./data_from_papers/Gawronski-Experiment4.sav")
+names(d)
+
+# For the rating variables (Pro..._S/T), we can deduce from the supplemental information
+# that for participants in the sharing condition (irrelevant), the ending is "_C". 
+# For participants in the truth prime condition (the one we are interested in), 
+# as in experiment 1, 
+# S indicates that participants were assigned to "Sharing" condition and T 
+# to accuracy (or Truth) judgement. 
+
+d <- d %>% 
+  # remove failed attention checks (according to paper)
+  filter(is.na(Attn)) %>% 
+  # restrict to key variables
+  select(ResponseId, PO_Part, starts_with("Pro")) %>% 
+  # bring into long format and separate variables
+  pivot_longer(ProDemFake_09_T:ProDemReal_12_S,
+               names_to = "SlantVeracity_number_condition", 
+               values_to = "outcome") %>% 
+  separate_wider_delim(SlantVeracity_number_condition, delim = "_", 
+                       names = c("SlantVeracity", "number", "condition")) %>% 
+  separate_wider_position(SlantVeracity, c(slant = 6, veracity = 4)) %>% 
+  # add a headline id
+  arrange(ResponseId) %>% 
+  mutate(headline_id = rep(1:60, nrow(.)/60)) %>% 
+  # get only accuracy rating participants (not sharing once)
+  filter(condition == "T") %>% 
+  rename(accuracy = outcome) %>% 
+  group_by(ResponseId) %>% 
+  mutate(na_count = sum(is.na(accuracy))) %>%
+  filter(na_count != 60) %>%
+  ungroup() %>% 
+  mutate(
+    # Make nicer political identity variable
+    political_identity = ifelse(PO_Part == 1, "ProRep", "ProDem"), 
+    # Make concordance variable
+    concordance = ifelse(political_identity == slant, "concordant", "discordant")
+  ) %>% 
+  select(ResponseId, veracity, accuracy, concordance)
+
+# summary data
+d %>% 
+  group_by(concordance, veracity) %>% 
+  summarise(across(accuracy, list(mean = mean, sd = sd), na.rm=TRUE), 
+            n_subj = n_distinct(ResponseId))
 
 
+# Garrett, R. K., & Bond, R. M. (2021). 
+# Conservatives’ susceptibility to political misperceptions. 
+# Science Advances, 7(23), eabf1234. https://doi.org/10.1126/sciadv.abf1234
+
+# No codebook, but the stata labels provide some insight.
+
+# data with panel responses
+d <- read_dta("./data_from_papers/Garret_panelPublic.dta")
+
+d <- d %>% 
+  # Remove variable labels (they slow down computation)
+  haven::zap_labels() %>% 
+  # add participant id
+  mutate(participant_id = 1:nrow(.), 
+         scale = 4) %>% 
+  # bring to long format
+  pivot_longer(matches("^[A-Z]\\d+"), 
+               names_to = "VeracityNumberWeek_Wave",
+               values_to = "accuracy") %>% 
+  # assign a headline_id
+  mutate(headline_id = VeracityNumberWeek_Wave) %>% 
+  # split the headline capturing variable in variables meaningful for 
+  # analysis
+  separate_wider_regex(VeracityNumberWeek_Wave,
+                       patterns  = c(veracity = "T|F",
+                                     number = "\\d+",
+                                     variant = "b|bn|e",
+                                     wave = "_W\\d+")) %>% 
+  # clean some variables
+  mutate(wave = as.numeric(str_extract(wave, "\\d+")), 
+         veracity = ifelse(veracity == "F", "fake", "true"),
+         # remove NA values for accuracy and political identity
+         across(c(accuracy, polid_W1), function(x) (ifelse (x %in% c(8,9), NA, x))),
+         # from their supplemental material (and it fits with plausibility check)
+         # they reverse coded accuracy (1 = probably true). We reverse-code it to 
+         # be in line with other studies
+         accuracy = 5-accuracy,
+         political_party = case_when(pid3 == 1 ~ "democrat", 
+                                     pid3 == 2 ~ "republican", 
+                                     TRUE ~ NA_character_
+                                     )
+         ) %>% 
+  # select key variables
+  select(participant_id, headline_id, veracity, accuracy, wave, variant, political_party)
+
+# check political party 
+table(d$political_party, useNA  = "always")
+
+# check single participant single wave
+single_participant_single_wave <- d %>% 
+  filter(participant_id == 1, wave == 1) %>% 
+  pivot_wider(names_from = variant, 
+              values_from = accuracy)
+# Cross-checking question labels, ratings, and the supplemental material, it seems that `variant` == e
+# encodes whether participant had encountered the headline or not (it only uses binary codes), 
+# `variant` == "b" means encountered before, and `variant` == `bn` means unfamiliar
+
+d <- d %>% 
+  filter(variant != "e") %>% 
+  drop_na(accuracy) %>% 
+  rename(encountered_before = variant) %>% 
+  mutate(encountered_before = ifelse(encountered_before == "b", TRUE, FALSE), 
+         # change headline id, remove "e," "bn," or "b" from strings in the "Variable" column
+         headline_id = gsub("[ebn]", "", headline_id)
+         )
+
+# (result) data identifying political slant of headlines
+slant <- read_dta("./data_from_papers/Garret_AMTstatementSlant.dta")
+
+# To be able to classify politically concordant and discordant ratings, 
+# we need to match both.
+
+# give matching id the same name as in the main data
+slant <- slant %>% 
+  rename(headline_id = statement_num) %>% 
+  # change headline id, remove "e," "bn," or "b" from strings in the "Variable" column
+  mutate(headline_id = gsub("[ebn]", "", headline_id))
+
+# For the slant data, it seems that `rFavor` are is the aggregated rating from republicans, 
+# `dFavor` from demcorats, and `pFavor` some resulting compromise. 
+# This interpretation fits with what they write in the paper: 
+# "We labeled each statement as favoring the party that benefited more or was 
+# hurt less according to the two groups of partisan workers. When both groups 
+# said that neither party benefited more, or when they gave contradictory assessments, 
+# we labeled the statements as favoring neither party"
+
+# check conflicting cases
+slant %>% 
+  mutate(conflict = case_when(rFavor == 1 & dFavor == 2 ~ TRUE, 
+                              rFavor == 2 & dFavor == 1 ~ TRUE,
+                              TRUE ~ FALSE
+                              )
+         ) %>% 
+  filter(conflict == TRUE)
+
+# rename slant variable and labels
+slant <- slant %>% 
+  rename(slant = pFavor) %>% 
+  mutate(slant = case_when(slant == 1 ~ "democrat", 
+                           slant == 2 ~ "republican", 
+                           slant == 3 ~ "neutral"))
 
 
+full_d <- left_join(d, slant)  
+
+# we split the sample in those who identify as democrat or republican and those who don't
+political_d <- full_d %>% 
+  filter(!is.na(political_party)) %>% 
+  mutate(concordance = case_when(slant == political_party ~ "concordant", 
+                                 slant == "neutral" ~ "neutral", 
+                                 slant != political_party ~ "discordant"))
+
+Apolitical_d <- full_d %>% 
+  filter(is.na(political_party))
 
 
+# summary data political
+political_d %>% 
+  group_by(wave, concordance, veracity) %>% 
+  summarise(across(accuracy, list(mean = mean, sd = sd), na.rm=TRUE), 
+            n_subj = n_distinct(participant_id), 
+            n_headline = n_distinct(headline_id)) %>% 
+  print(n = 90)
 
-
-
-
+# summary data Apolitical
+Apolitical_d %>% 
+  group_by(wave, veracity) %>% 
+  summarise(across(accuracy, list(mean = mean, sd = sd), na.rm=TRUE), 
+            n_subj = n_distinct(participant_id), 
+            n_headline = n_distinct(headline_id)) %>% 
+  print(n = 30)
 

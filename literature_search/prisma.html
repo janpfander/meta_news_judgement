@@ -428,7 +428,7 @@ or <code>Title</code>.</p>
 <p>Combine the <code>included</code> and <code>excluded</code> sheet
 into a single <code>studies</code> data frame.</p>
 <pre class="r"><code># make both sheets compatible
-included_compatible &lt;- included %&gt;% select(reference) %&gt;% mutate(included = &quot;included&quot;)
+included_compatible &lt;- included %&gt;% select(paperID, reference) %&gt;% mutate(included = &quot;included&quot;)
 
 excluded_compatible &lt;- excluded %&gt;% select(reference) %&gt;% mutate(included = &quot;excluded&quot;)
 
@@ -519,7 +519,7 @@ contains all studies we assessed.</p>
 authors). This is not a relevant prisma statistic, but we will report it
 anyways.</p>
 <pre class="r"><code># make a data frame with source of summary stats
-statistics_source &lt;- read_csv(&quot;../data/data.csv&quot;) %&gt;% 
+statistics_source &lt;- read_csv(&quot;../data/cleaned.csv&quot;) %&gt;% 
   group_by(paperID) %&gt;% 
   summarize(reference = unique(reference), 
             values_from = first(values_from)) %&gt;% 
@@ -528,7 +528,7 @@ statistics_source &lt;- read_csv(&quot;../data/data.csv&quot;) %&gt;%
   mutate(across(reference, make_strings_more_compatible)) 
 
 # add this variable to studies data frame
-studies &lt;- left_join(studies, statistics_source, by = &quot;reference&quot;) %&gt;% 
+studies &lt;- left_join(studies, statistics_source, by = &quot;paperID&quot;) %&gt;% 
   # This join will assign values to partly excluded studies. 
   # We have to code these as NAs separately
   mutate(values_from = ifelse(included == &quot;excluded&quot;, NA, values_from))</code></pre>
@@ -588,21 +588,21 @@ prisma %&gt;% print(n = 30)</code></pre>
 ##  2 google                               980
 ##  3 overal                              4982
 ##  4 duplicates                           156
-##  5 other_methods                         36
+##  5 other_methods                         40
 ##  6 screened                            4826
-##  7 screening_excluded                  4721
-##  8 retrieval_databases                  105
+##  7 screening_excluded                  4720
+##  8 retrieval_databases                  106
 ##  9 exluded_databases                     74
 ## 10 exluded_databases_fulltext            69
 ## 11 exluded_databases_abstract             5
-## 12 retrieval_other                       36
+## 12 retrieval_other                       40
 ## 13 excluded_other                        19
-## 14 studies_included                      48
+## 14 studies_included                      53
 ## 15 studies_included_paper                20
 ## 16 studies_included_authors              12
-## 17 studies_included_data                 16
-## 18 assessed_for_elegibility_databases   105
-## 19 assessed_for_elegibility_other        36
+## 17 studies_included_data                 21
+## 18 assessed_for_elegibility_databases   106
+## 19 assessed_for_elegibility_other        40
 ## 20 not_retrieved_databases                0
 ## 21 not_retrieved_other                    0</code></pre>
 </div>

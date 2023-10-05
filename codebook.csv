@@ -23,6 +23,7 @@ recycled_news,"whether a set of news items has been used in another paper we alr
 recycled_news_reference,"if `recycled_news` == ('recycled') or  ('partly'), indicates reference of source"
 news_selection,"Who selected the news items? (mostly 'researchers', but can also take other levels) "
 selection_fake_news,How were fake news items selected? (almost always 'fact-checking websites')
+selection_fake_news_grouped,"Binary version of `selection_fake_news`, with levels `fact check sites` when items were selected from fact checking sites and `identified by researchers` if researchers estiblished the veracity of news"
 selection_true_news,"How were true news items selected?(often 'mainstream media', but can also be otherwise, e.g. 'fact-checking websites')"
 news_family,"What 'family' of news wer selected? Can be anything, e.g. 'political', 'environment', 'covid' etc. "
 news_family_grouped,"version of news_family with only three levels: `political` (including concordant vs. discordant), `covid` and `other` (historical; environment/health/science/ /militar). The baseline for the regression will be `political`"

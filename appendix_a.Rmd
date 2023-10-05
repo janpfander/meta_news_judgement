@@ -1,35 +1,31 @@
 # Effect sizes {#effect-sizes}
 
-## Alternative effect sizes
+## Preregistered analysis
 
-\FloatBarrier  
+\FloatBarrier
 
-Table \@ref(tab:effects) shows the estimated SMCC for both discernment (H1) and response bias (H2). For reference, we included the estimates for two alternative estimators: A standardized mean difference assuming independence (SMD), precisely Hedge's g, and a standardized mean change using raw (instead of change) score standardization (SMCR) [@becker1988]. When using raw score standardization, the standardized mean change expresses the effect size in terms of the standard deviation units of the pre-treatment (in our case false news) scores, rather than the standard deviation of the difference scores (involving the correlation) [@becker1988]. While our SMCC depends on the value of the correlation between the false and true news scores, the SMD and the SMCR do not. The interpretation of all three effect measures is similar: all are expressed in terms of standard deviations. Yet, they are different estimators, because they rely on different standard deviations, thereby producing different estimates and standard errors [@morris2002]. Due to the low average correlation between false and true news ratings, the SMCC produces the most conservative (i.e. smallest) effect estimates for both discernment and response bias.
+In the main analysis that we report in the paper, we relied on Cohen's d as a standardized effect measure. However, we had pre-registered relying on standardized mean changes using change score standardization (SMCC) [@gibbons_estimation_1993] for within participant designs, and Hedge's g for the remaining `r descriptives$design$between$n` effect sizes from between participant designs [@hedges_distribution_1981].
 
-```{r effects, fig.pos='H'}
-# main result table
-modelsummary::modelsummary(list("Discernment" = robust_model_accuracy, 
-                                "Response bias" = robust_model_error,
-                                "Discernment" = SMCR_model_accuracy, 
-                                "Response bias" = SMCR_model_error,
-                                "Discernment" = SMD_model_accuracy, 
-                                "Response bias" = SMD_model_error),
-                           title = 'Model results', 
-                           stars = TRUE, 
-                           coef_rename = c("overall" = "Estimate")
-                           ) %>%
-  add_header_above(c(" " = 1, "SMCC" = 2, "SMCR" = 2, "SMD" = 2)) %>%
-  add_header_above(c(" " = 1, "Main estimator (preregistered) " = 2, "Alternative estimators" = 4),
-                   line = FALSE, italic = TRUE) %>%
-  # make smaller to fit
-  kable_styling(latex_options = "scale_down") %>%
-  footnote(general = "Comparison of different effect sizes. The SMCC (Standardized mean change using change score standardization) is the estimator we pre-registered and report in the main analysis. For reference, we provide the results we obtain when using a standardized mean difference assuming independence (SMD), precisely Hedge's g, and a standardized change score using raw (instead of change) standardization (SMCR). For effects from studies that used a between participant design, we always calculated Hedge's G, including in those results listed under \"SMCC\" and \"SMCR\"."
-           , threeparttable = TRUE)
-```
+As Cohen's d, the SMCC expresses effects in units of (pooled) standard deviations, allowing for comparison across different scales. Also similar to the Cohen's d we calculated, the SMCC relies on a correlation estimate to account for statistical dependencies arising from the within participant design used by most studies. By contrast, the SMCC also uses this correlation coefficient in calculating the pooled standard deviation (and not only the standard error, as with our Cohen's d). As a result, the effect size estimate itself (and not only its certainty) are affected by the imputed correlation value. 
+
+Precisely, the SMCC is calculated as
+
+$$
+SMCC = \frac{MD}{SD_d}
+$$
+
+with $MD$ being the mean difference/change score (mean true news score minus mean false news score) and $SD_d$ being standard deviation of the difference/change scores, which (assuming equal standard deviations for false and true news) is calculated as: $SD_d = SD_{false/true}\sqrt{2(1-r)}$ [@morris2002].
+
+The SMCC varies with the imputed correlation value $r$, because $SD_d$ varies as a function of $r$. If $r$ is greater than .5, $SD_d$ will be smaller than $SD_{false/true}$, and as a result, the SMCC will be larger than the estimate obtained by a standardized mean difference assuming independence such as Cohen's d. By contrast, when the correlation is less than .5, $SD_d$ will be greater than $SD_{false/true}$, and the SMCC will be smaller [@morris2002]. In our case, the imputated average correlation is `r average_correlation %>% round(digits = 2)`. 
+
+Table \@ref(tab:effects) shows that the SMCC yields slightly smaller effect sizes than the Cohen's d (because the correlation between true and false news is smaller than .5), but all conclusions remain the same. 
+
+In the next section, we show the results of sensitivity analyses for the imputed correlation value when calculating the SMCC.
 
 ## Sensitivity analysis for imputed correlation
 
-When using *standardized* effect measures, accounting for dependency by imputing correlations impacts the magnitude of the effect estimate itself. That is because, in this case, the standard deviation is not only used to calculate the standard error (as with *non* standardized effects), but also for the effect itself. [Standardized effect measures depending on imputed correlations should therefore be accompanied by a sensitivity analysis](https://training.cochrane.org/handbook/current/chapter-23#section-23-2-7-2), i.e. check how sensitive the effect estimate is to different imputed correlation values [@higgins_cochrane_2019]. Figures \@ref(fig:correlations-discernment) and \@ref(fig:correlations-bias) show that our results hold when imputing any of the other correlation values occurring in the individual-level data. Moreover, all estimates from those imputations yield conservative (i.e. smaller) estimates compared to Hedges' g.
+When using the SMCC, accounting for dependency by imputing correlations impacts the magnitude of the effect estimate itself. [Standardized effect measures depending on imputed correlations should therefore be accompanied by a sensitivity analysis](https://training.cochrane.org/handbook/current/chapter-23#section-23-2-7-2), i.e. check how sensitive the effect estimate is to different imputed correlation values [@higgins_cochrane_2019]. Figures \@ref(fig:correlations-discernment) and \@ref(fig:correlations-bias) show the results of the SMCC when imputing any of the other correlation values occurring in the individual-level data. All estimates from those imputations yield smaller estimates compared to a standardized mean difference assuming independence (we picked Hedges' g as a reference here).
+
 ```{r, message = FALSE}
 # load individual level subset data and average correlation
 individual_level_subset <- read_csv("data/individual_level_subset.csv")
@@ -56,7 +52,8 @@ robustness_correlation_values <- function(correlations, effect) {
         mutate(cor = x)
       
       # Step 2: Caculate effect data
-      data <- calculate_effect_sizes(data = raw_data, effect = effect)
+      data <- calculate_effect_sizes(data = raw_data, effect = effect, 
+                                     measure = "SMCC")
       
       # Step 3: Run model
       model <- calculate_models(data)
@@ -102,7 +99,7 @@ robustness_plot <- function(effect){
   # set name for plot
   if(str_detect(effect, "accuracy")){
     name <- "Discernment"
-  } else { name <- "Response bias"}
+  } else { name <- "Skepticism  bias"}
   
   # calculate effect as function of correlation value for error
   effect_by_correlation <- robustness_correlation_values(correlations, effect = effect)
@@ -110,9 +107,9 @@ robustness_plot <- function(effect){
   # calculate effect assuming independence for error
   effect_independence <- robustness_independence(effect = effect)
   
-  # get data and main model results from environment
-  main_model_name <- paste0("robust_model_", effect)
-  data_name <- paste0(effect, "_effect")
+  # get data and main SMCC model results from environment 
+  main_model_name <- paste0("SMCC_model_", effect)
+  data_name <- paste0("SMCC_", effect, "_effect")
   
   main_model <- get(main_model_name)
   data <- get(data_name)
@@ -200,13 +197,13 @@ return(list(effect_plot, SE_plot))
 accuracy_plots <- robustness_plot("accuracy")
 ```
 
-(ref:correlations-discernment) Estimated effect and standard error for discernment as a function of the imputed correlation value. Each dot represents an estimate corresponding to an imputed correlation value. There is one dot for each observed intra-sample correlation in the individual-level data. For reference, the horizontal dotted lines mark the estimate obtained when using Hedges'g, an effect size assuming independence.  
+(ref:correlations-discernment) Estimated effect and standard error for discernment as a function of the imputed correlation value. Each dot represents an estimate corresponding to an imputed correlation value. There is one dot for each observed intra-sample correlation in the individual-level data. For reference, the horizontal dotted lines mark the estimate obtained when using Hedges'g, an effect size assuming independence.
 
 ```{r correlations-discernment, fig.cap="(ref:correlations-discernment)", fig.height= 3}
 accuracy_plots[[1]] + accuracy_plots[[2]]
 ```
 
-(ref:correlations-bias) Estimated effect and standard error for response bias as a function of the imputed correlation value. Each dot represents an estimate corresponding to an imputed correlation value. There is one dot for each observed intra-sample correlation in the individual-level data. For reference, the horizontal dotted lines mark the estimate obtained when using Hedges'g, an effect size assuming independence. 
+(ref:correlations-bias) Estimated effect and standard error for skepticism  bias as a function of the imputed correlation value. Each dot represents an estimate corresponding to an imputed correlation value. There is one dot for each observed intra-sample correlation in the individual-level data. For reference, the horizontal dotted lines mark the estimate obtained when using Hedges'g, an effect size assuming independence. 
 
 ```{r, include=FALSE}
 # make plots for error
@@ -215,6 +212,33 @@ error_plots <- robustness_plot("error")
 
 ```{r correlations-bias, fig.cap="(ref:correlations-bias)", fig.height= 3}
 error_plots[[1]] + error_plots[[2]]
+```
+
+## Alternative effect sizes
+
+Table \@ref(tab:effects) shows compares different effect size estimators for both both discernment (H1) and skepticism  bias (H2). Besides Cohen's d, the estimator of the main study, and SMCC, the pre-registered estimator, we additionally included the estimates for two alternative estimators: A standardized mean difference assuming independence (SMD), precisely Hedge's g (a version of Cohen's d that corrects for small sample sizes), and a standardized mean change using raw (instead of change) score standardization (SMCR) [@becker1988]. When using raw score standardization, the standardized mean change expresses the effect size in terms of the standard deviation units of the pre-treatment (in our case false news) scores, rather than the standard deviation of the difference scores (involving the correlation) [@becker1988]. Among all estimators, the SMCC is the only one in which the effect size estimate depends on the value of the correlation between the false and true news scores. The interpretation of all these standardized effect measures is similar: all are expressed in terms of standard deviations. Yet, they are different estimators, because they rely on different standard deviations, thereby producing different estimates and standard errors [@morris2002]. Due to the low average correlation between false and true news ratings, the SMCC produces the smallest effect estimates for both discernment and skepticism  bias.
+
+```{r effects, fig.pos='H'}
+# main result table
+modelsummary::modelsummary(list("Discernment" = robust_model_accuracy, 
+                                "Skepticism  bias" = robust_model_error,
+                                "Discernment" = SMCC_model_accuracy, 
+                                "Skepticism  bias" = SMCC_model_error,
+                                "Discernment" = SMCR_model_accuracy, 
+                                "Skepticism  bias" = SMCR_model_error,
+                                "Discernment" = SMD_model_accuracy, 
+                                "Skepticism  bias" = SMD_model_error),
+                           title = 'Model results', 
+                           stars = TRUE, 
+                           coef_rename = c("overall" = "Estimate")
+                           ) %>%
+  add_header_above(c(" " = 1, "Cohen's d" = 2, "SMCC" = 2, "SMCR" = 2, "SMD" = 2)) %>%
+  add_header_above(c(" " = 1, "Main estimator" = 2, "Preregistered estimator" = 2, "Alternative estimators" = 4),
+                   line = FALSE, italic = TRUE) %>%
+  # make smaller to fit
+  kable_styling(latex_options = "scale_down") %>%
+  footnote(general = "Comparison of different effect sizes. Cohen's d is the estimator we report in the main analysis. SMCC (Standardized mean change using change score standardization) is the estimator we pre-registered. For reference, we provide the results we obtain when using a standardized mean difference assuming independence for all effect sizes (SMD), precisely Hedge's g, and a standardized change score using raw (instead of change) standardization (SMCR). For effects from studies that used a between participant design, we calculated Hedge's g in the results listed under \"SMCC\" and \"SMCR\"."
+           , threeparttable = TRUE)
 ```
 
 ## Effects on original scales
@@ -273,7 +297,7 @@ error_list <- setNames(error_list, sapply(names(error_list), extract_number))
 
 # make list of lists
 results <- list("Discernment" = accuracy_list, 
-                "Response bias" = error_list)
+                "Skepticism  bias" = error_list)
 
 
 # by scale result table

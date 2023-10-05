@@ -16,7 +16,7 @@ bias <- error_effect %>%
 
 # main result table
 modelsummary::modelsummary(list("Discernment" = discernment, 
-                                "Response bias" = bias),
+                                "Skepticism  bias" = bias),
                            title = 'Egger\'s regression', 
                            stars = TRUE, 
                            coef_rename = c("x" = "Inverse SE")

@@ -1,108 +1,195 @@
 # Function to round numbers (generally used on tidy output of models)
 round_numbers <- function(x) mutate_if(x, is.numeric, round, 2)
 
-# Function for calculating effect sizes.
-# We make measure an argument so that we can change it for later robustness checks.
+# Function to calculate Cochrane version of Cohen's d for crossover trials.
+# Applies directly the procedure outlined here:
+# https://training.cochrane.org/handbook/current/chapter-23#section-23-2-7-2
+# We use this function inside the calculate_effect_sizes() function.
+cochrane_cohens_d <- function(r = cor, n = n_observations, 
+                              mean_true, mean_fake, sd_true, sd_fake, data) {
+  
+  data <- data %>% 
+    mutate(
+      # Caclulate the raw mean difference
+      md = {{mean_true}} - {{mean_fake}},
+      # Calculate pooled sd
+      pooled_sd = sqrt(({{sd_true}}^2 + {{sd_fake}}^2)/2), 
+      # Calculate cohen's d
+      cohens_d = md/pooled_sd, 
+      # Calculate standard error (depending on design)
+      se = ifelse(design == "within", 
+                  # account for correlation between true and fake news 
+                  # in within designs 
+                  sqrt(((2*(1-{{r}}))/{{n}}) + (cohens_d^2/(2*{{n}}))), 
+                  # assume independence for between design
+                  sqrt(({{n}}/(({{n}}/2)*({{n}}/2))) + (cohens_d^2/(2*{{n}})))
+      ),
+      # Calculate sampling variance 
+      sampling_variance = se^2
+    ) %>% 
+    # remove helper variables
+    select(-c(md, pooled_sd, se)) %>% 
+  # name effect size and sampling variance using labels of the output of  
+  # the escalc() function from the metafor package
+  rename(
+    yi = cohens_d, 
+    vi = sampling_variance
+  )
+  
+  return(data)
+}
+
+# Function for calculating effect sizes using variable metrics.
+# Note that the function relies on the escalc() function from the metafor package 
+# for all effect measures expect for "Cochrane".
+# Cochrane corresponds to the guidelines for crossover trials in the Cochrane manual. 
+# It's a Cohen's d, but with a standard error that takes into account the correlation 
+# between true and false news ratings.
+
 
 calculate_effect_sizes <- function(effect, measure = "SMCC", data = meta_wide, 
                                    measure_between = "SMD") {
   
-  if(effect == "accuracy") {
+  # if the Cochrane method for calculating Cohen's D is used
+  if(measure == "Cochrane") {
     
-    # Within participant studies
-    # "SMCC" for the standardized mean change using change score standardization 
-    # use escalc function
-    within_participants <- escalc(measure= {{measure}}, 
-                                  # diff = true (m1i) - fake (m2i)
-                                  m2i= mean_accuracy_fake, 
-                                  sd2i=sd_accuracy_fake, 
-                                  ni=n_observations, 
-                                  m1i=mean_accuracy_true,
-                                  sd1i=sd_accuracy_true, 
-                                  data = data %>% 
-                                    # restrict to within studies only
-                                    filter(design == "within"), 
-                                  ri = cor, 
-                                  # in case outcome is "SMD"
-                                  n1i=n_observations,
-                                  n2i=n_observations
-    )
-    
-    # Without the following bit, it would not be possible to run the function on 
-    # a subset of data that has no between studies
-    if(nrow(data %>% filter(design == "between")) != 0) {
-      
-      # Between participant studies.
-      # we use the escalc function from the metafor package
-      # standardized mean difference (SMD)
-      between_participants <- escalc(measure= {{measure_between}},
-                                     # diff = true (m1i) - fake (m2i)
-                                     m2i= mean_accuracy_fake,
-                                     sd2i=sd_accuracy_fake, n2i=n_observations,
-                                     m1i=mean_accuracy_true, sd1i=sd_accuracy_true,
-                                     n1i=n_observations,
-                                     data = data %>%
-                                       # restrict to between studies only
-                                       filter(design == "between")
+    # For accuracy
+    if(effect == "accuracy") {
+      accuracy_effect <- cochrane_cohens_d(
+        r = cor, 
+        n = n_observations, 
+        mean_true = mean_accuracy_true, 
+        mean_fake = mean_accuracy_fake, 
+        sd_true = sd_accuracy_true, 
+        sd_fake = sd_accuracy_fake, 
+        data = data
       )
-      
-      # Re-unite both designs in a single data frame
-      accuracy_effect <- rbind(within_participants, between_participants)  
       return(accuracy_effect)
-      
-    } else {
-      # Alternative for data without any between studies
-      return(within_participants)
+    }
+    
+    # For error
+    if(effect == "error") {
+      error_effect <- cochrane_cohens_d(
+        r = cor, 
+        n = n_observations, 
+        mean_true = error_true, 
+        mean_fake = error_fake, 
+        sd_true = sd_accuracy_true, 
+        sd_fake = sd_accuracy_fake, 
+        data = data
+      )
+      return(error_effect)
     }
   }
   
-  if(effect == "error") {
-    # Within participant studies
+  # if any other measure is used, rely on the metafor package
+  if(measure != "Cochrane") {
     
-    # "SMCC" for the standardized mean change using change score standardization 
-    # use escalc function
-    within_participants <- escalc(measure= {{measure}}, 
-                                  # diff = true (m1i) - fake (m2i)
-                                  m2i= error_fake, 
-                                  sd2i=sd_accuracy_fake, 
-                                  ni=n_observations, 
-                                  m1i=error_true,
-                                  sd1i=sd_accuracy_true, 
-                                  data = data %>% 
-                                    # restrict to within studies only
-                                    filter(design == "within"), 
-                                  ri = cor, 
-                                  # in case outcome is "SMD"
-                                  n1i=n_observations,
-                                  n2i=n_observations)
-    
-    # Without the following bit, it would not be possible to run the function on 
-    # a subset of data that has no between studies
-    if(nrow(data %>% filter(design == "between")) != 0) {
+    if(effect == "accuracy") {
       
-      # Between participant studies. 
-      # we use the escalc function from the metafor package
-      # standardized mean difference (SMD)
-      between_participants <- escalc(measure={{measure_between}},
-                                     # diff = true (m1i) - fake (m2i)
-                                     m2i= error_fake,
-                                     sd2i=sd_accuracy_fake, n2i=n_observations,
-                                     m1i=error_true, sd1i=sd_accuracy_true,
-                                     n1i=n_observations,
-                                     data = data %>%
-                                       # restrict to between studies only
-                                       filter(design == "between")
+      # Within participant studies
+      # "SMCC" for the standardized mean change using change score standardization 
+      # use escalc function
+      within_participants <- escalc(measure= {{measure}}, 
+                                    # diff = true (m1i) - fake (m2i)
+                                    m2i= mean_accuracy_fake, 
+                                    sd2i=sd_accuracy_fake, 
+                                    ni=n_observations, 
+                                    m1i=mean_accuracy_true,
+                                    sd1i=sd_accuracy_true, 
+                                    data = data %>% 
+                                      # restrict to within studies only
+                                      filter(design == "within"), 
+                                    ri = cor, 
+                                    # in case outcome is "SMD"
+                                    n1i=n_observations,
+                                    n2i=n_observations
       )
       
-      # Re-unite both designs in a single data frame 
-      error_effect <- rbind(within_participants, between_participants)
-      return(error_effect) 
-      
-    } else {
-      # Alternative for data without any between studies
-      return(within_participants)
+      # Without the following bit, it would not be possible to run the function on 
+      # a subset of data that has no between studies
+      if(nrow(data %>% filter(design == "between")) != 0) {
+        
+        # Between participant studies.
+        # we use the escalc function from the metafor package
+        # standardized mean difference (SMD)
+        between_participants <- escalc(measure= {{measure_between}},
+                                       # diff = true (m1i) - fake (m2i)
+                                       m2i= mean_accuracy_fake,
+                                       sd2i=sd_accuracy_fake, 
+                                       # divide by two because of the way we coded
+                                       # for between participant designs 
+                                       # (n_subj = both conditions combined)
+                                       n2i=n_observations/2,
+                                       m1i=mean_accuracy_true, sd1i=sd_accuracy_true,
+                                       n1i=n_observations/2,
+                                       data = data %>%
+                                         # restrict to between studies only
+                                         filter(design == "between")
+        )
+        
+        # Re-unite both designs in a single data frame
+        accuracy_effect <- rbind(within_participants, between_participants)  
+        return(accuracy_effect)
+        
+      } else {
+        # Alternative for data without any between studies
+        return(within_participants)
+      }
     }
-  } 
+    
+    if(effect == "error") {
+      # Within participant studies
+      
+      # "SMCC" for the standardized mean change using change score standardization 
+      # use escalc function
+      within_participants <- escalc(measure= {{measure}}, 
+                                    # diff = true (m1i) - fake (m2i)
+                                    m2i= error_fake, 
+                                    sd2i=sd_accuracy_fake, 
+                                    ni=n_observations, 
+                                    m1i=error_true,
+                                    sd1i=sd_accuracy_true, 
+                                    data = data %>% 
+                                      # restrict to within studies only
+                                      filter(design == "within"), 
+                                    ri = cor, 
+                                    # in case outcome is "SMD"
+                                    n1i=n_observations,
+                                    n2i=n_observations)
+      
+      # Without the following bit, it would not be possible to run the function on 
+      # a subset of data that has no between studies
+      if(nrow(data %>% filter(design == "between")) != 0) {
+        
+        # Between participant studies. 
+        # we use the escalc function from the metafor package
+        # standardized mean difference (SMD)
+        between_participants <- escalc(measure={{measure_between}},
+                                       # diff = true (m1i) - fake (m2i)
+                                       m2i= error_fake,
+                                       sd2i=sd_accuracy_fake, 
+                                       # divide by two because of the way we coded
+                                       # for between participant designs 
+                                       # (n_subj = both conditions combined)
+                                       n2i=n_observations/2,
+                                       m1i=error_true, sd1i=sd_accuracy_true,
+                                       n1i=n_observations/2,
+                                       data = data %>%
+                                         # restrict to between studies only
+                                         filter(design == "between")
+        )
+        
+        # Re-unite both designs in a single data frame 
+        error_effect <- rbind(within_participants, between_participants)
+        return(error_effect) 
+        
+      } else {
+        # Alternative for data without any between studies
+        return(within_participants)
+      }
+    } 
+  }
 }
 
 # Function to calculate meta models
@@ -217,7 +304,8 @@ moderator_plots <- function(data, name, common_plot = TRUE) {
   # define moderators
   moderators <- c("news_family_grouped", "country_grouped","political_concordance", 
                   "news_format_grouped", 
-                  "news_source", "accuracy_scale_grouped", "perfect_symetry")
+                  "news_source", "accuracy_scale_grouped", "perfect_symetry", 
+                  "selection_fake_news_grouped")
   
   # empty list
   plot_list <- list()
@@ -246,7 +334,7 @@ moderator_plots <- function(data, name, common_plot = TRUE) {
       scale_fill_viridis_d(option = "turbo", begin = 0.1,, end = 0.9) +
       # labels and scales
       guides(color = "none", fill = "none") +
-      labs(x = NULL, y = paste0("SMCC (", name, ")")) +
+      labs(x = NULL, y = paste0("Cohen's d (", name, ")")) +
       plot_theme + 
       theme(
         # Bold title
@@ -261,7 +349,7 @@ moderator_plots <- function(data, name, common_plot = TRUE) {
     plot <- ggpubr::ggarrange(plotlist = plot_list,
                               labels = c("(a) News Family", "(b) Country", "(c) Political Concordance",
                                          "(d) News Format", "(e) News Source", "(f) Accuracy Scale", 
-                                         "(g) Symmetry"),
+                                         "(g) Symmetry", "(f) False news selection"),
                               font.label = list(size = 10), 
                               ncol = 2, 
                               nrow = 4) %>%
@@ -293,7 +381,7 @@ plot_concordance <- function(outcome) {
   if(outcome == "error") {
     
     ## plot effects
-    concordance_plot <- moderator_plots(error_effect, "Response bias", common_plot = FALSE)[[3]]
+    concordance_plot <- moderator_plots(error_effect, "Skepticism bias", common_plot = FALSE)[[3]]
     
     # retrieve data from models
     intercept <- coef(moderator_models_error$Concordance)[[1]]
@@ -378,7 +466,52 @@ plot_share_true <- function(data, name) {
     # Labels and scales
     scale_y_continuous(limits = c(-1.5, 3)) +
     guides(color = "none", fill = "none") +
-    labs(x = "Share of true news", y = paste0("SMCC (", name, ")")) +
+    labs(x = "Share of true news", y = paste0("Cohen's d (", name, ")")) +
+    plot_theme + 
+    theme(axis.title = element_text(size = rel(0.8), face = "plain"),
+          axis.text.x = element_text(angle = 45, hjust = 1))
+  
+  return(plot)
+}
+
+# Version of share of true news plot where share share is treated as continuous
+# variable
+plot_share_true_continuous <- function(data, name) {
+  # Make a factor variable
+  data <- data %>% 
+    mutate(
+      share_true_news = round(share_true_news, digits = 2),
+      share_true_news_factor = ordered(share_true_news)
+    )
+  
+  # Get unique factor levels
+  factor_levels <- unique(data$share_true_news_factor)
+  
+  
+  # Make plot
+  plot <- ggplot(data = data, aes(x = share_true_news, 
+                                  y = yi, 
+                                  color = share_true_news_factor)) +
+    # Add points for factor levels with a single observation
+    geom_point(
+      data = data,
+      transformation_params = list(height = 0, width = 0.01, seed = 1),
+      alpha = 0.7
+    ) +
+    # Add line of 0
+    geom_hline(yintercept = 0, 
+               linewidth = 0.5, linetype = "24", color = "grey") +
+    # Colors 
+    scale_color_viridis_d(
+      option = "turbo",
+      begin = 0.1,
+      end = 0.9,
+      breaks = factor_levels
+    ) +
+    # Labels and scales
+    scale_y_continuous(limits = c(-1.5, 3)) +
+    guides(color = "none", fill = "none") +
+    labs(x = "Share of true news", y = paste0("Cohen's d (", name, ")")) +
     plot_theme + 
     theme(axis.title = element_text(size = rel(0.8), face = "plain"),
           axis.text.x = element_text(angle = 45, hjust = 1))
@@ -1068,7 +1201,7 @@ plot_map <- function(fill, data = accuracy_effect){
     return(discernment)
   }
   
-  if (fill == "response bias") {
+  if (fill == "skepticism bias") {
     # participants
     bias <- ggplot() + 
       geom_sf(data = map , 
@@ -1077,7 +1210,7 @@ plot_map <- function(fill, data = accuracy_effect){
       coord_sf(crs = st_crs("ESRI:54030")) +  # Robinson
       scale_fill_gradient2(low = "#2C7BB6", mid = "grey", high = "#D7191C",
                            midpoint = 0, na.value = "white") +
-      labs(fill = "Response bias") +
+      labs(fill = "Skepticism bias") +
       theme_void() +
       theme(legend.position = "bottom", 
             legend.key.width = unit(2, "cm"))
@@ -1160,7 +1293,7 @@ calculate_moderator_models <- function(data, list_report = FALSE) {
   # models below)
   
   names <- c("Country", "Concordance", "Family", "Format", "Source", "Scale", 
-             "Symmetrie", "All")
+             "Symmetrie", "False news", "All")
   
   # separate models per moderator 
   moderator_models <- list(
@@ -1212,6 +1345,13 @@ calculate_moderator_models <- function(data, list_report = FALSE) {
                                                        random = ~ 1 | unique_sample_id / 
                                                          observation_id, data=data),
                                        cluster = data$unique_sample_id
+    ),
+    
+    selection_fake_news_grouped <-  robust(metafor::rma.mv(yi, vi, 
+                                                      mods = ~selection_fake_news_grouped,
+                                                      random = ~ 1 | unique_sample_id / 
+                                                        observation_id, data=data),
+                                      cluster = data$unique_sample_id
     ),
     
     accuracy_all <- robust(metafor::rma.mv(yi, vi, 
@@ -1277,7 +1417,7 @@ plot_pcurve <- function(data){
   
   if(str_detect(name_data, "accuracy")){
     name <- "(a) Discernment"
-  } else { name <- "(b) Response bias"}
+  } else { name <- "(b) Skepticism bias"}
   
   # Create p-curve function compatible data
   p_curve_data <- data %>% 
