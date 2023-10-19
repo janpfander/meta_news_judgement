@@ -3,14 +3,6 @@
 
 # Spotting Fake News and Doubting True News: A Meta-Analysis of News judgements
 
-[Jan
-Pfänder](http://www.institutnicod.org/membres/etudiant-e-s/doctorant-e-s/pfander-jan/?lang=en)
-• Institut Jean Nicod, Département d’études cognitives, ENS, EHESS, PSL
-University, CNRS
-
-[Sacha Altay](https://sites.google.com/view/sacha-altay/home) •
-University of Zurich
-
 ------------------------------------------------------------------------
 
 [![OSF
@@ -48,12 +40,13 @@ acceptance of true news than to reduce the acceptance of false news.
 
 ------------------------------------------------------------------------
 
-This repository contains the code for our paper. Our pre-print is online
-here:
+This repository contains the code for our paper.
 
-> Jan Pfänder and Sacha Altay. 2023. “Spotting Fake News and Doubting
-> True News: A Meta-Analysis of News judgements”“. Accessed August 4,
-> 2023. Online at <https://osf.io/n9h4y/>
+Our pre-print is online here:
+
+> XX and XX. 2023. “Spotting Fake News and Doubting True News: A
+> Meta-Analysis of News judgements”“. Accessed October 19, 2023. Online
+> at <https://osf.io/96zbp/?view_only=d2f3147f652e44e2a0414d7d6d9a6c29>
 
 ## How to download and replicate
 
@@ -64,13 +57,20 @@ To reproduce the findings and re-run the analysis, do the following:
     top of the GitHub page).
 2.  Open `meta_news_judgement.Rproj` to open an [RStudio
     Project](https://r4ds.had.co.nz/workflow-projects.html).
-3.  Within the RStudio Project, open the `Pfander_Altay_2023.Rmd` file
-    and run it.
+3.  Within the RStudio Project, open the `anonymized.Rmd` file and run
+    it.
 
 For inspecting scripts directly on github, use the `.md` files. The
 source code can be found in the `.Rmd` and `.R` files.
 
 Please find the [session info below](#session-info).
+
+*Estimated installation time* : If you have R and Rstudio installed,
+then adding additional packages required in our R scripts is quick (a
+couple of minutes)
+
+*Estimated run time*: Rendering the `anonymized.Rmd` document takes
+about 5mins on our machine (see [session info](#session-info))
 
 ## Files glossary
 
@@ -102,7 +102,7 @@ The `data/` folder contains the main data sets.
   for maps.
 
 The `functions/` folder contains functions that we rely upon in our
-analysis scripts. To keep the `Pfander_Altay_2023.Rmd` document neat and
+analysis scripts. To keep the `anonymized.Rmd` document neat and
 readable, we wrote all lengthy code bits as external functions.
 
 The `literature_search/` folder documents our literature review -
@@ -120,11 +120,11 @@ statistics, we entered them by hand into the the raw data spreadsheet
 here, since they are already publicly available.
 
 Files preceded by `appendix_*` contain appendices to the
-`Pfander_Altay_2023.Rmd`. We stored them in seperate documents to keep
-the `Pfander_Altay_2023.Rmd` document as short as possible.
+`anonymized.Rmd`. We stored them in separate documents to keep the
+`anonymized.Rmd` document as short as possible.
 
 Files preceded by `simulation_*` contain data scripts for generating and
-analyzing simulated data. We simulated data help us clarify our
+analyzing simulated data. We simulated data to help us clarify our
 estimands and choose estimators before writing our pre-registration.
 
 `preregistration.Rmd` contians the source file for our pre-registration

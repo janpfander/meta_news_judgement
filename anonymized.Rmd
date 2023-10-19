@@ -922,11 +922,15 @@ We do not find any evidence to suspect p-hacking for either discernment or skept
 
 ### Data availability
 
-The extracted data used to produce our results are available on the OSF project page (<https://osf.io/96zbp/>).
+The extracted data used to produce our results are available on the OSF project page (<https://osf.io/96zbp/?view_only=d2f3147f652e44e2a0414d7d6d9a6c29>).
 
 ### Code availability
 
-The code used to create all results (including tables and figures) of this manuscript is also available on the OSF project page (<https://osf.io/96zbp/>).
+The code used to create all results (including tables and figures) of this manuscript is also available on the OSF project page (<https://osf.io/96zbp/?view_only=d2f3147f652e44e2a0414d7d6d9a6c29>).
+
+### Competing interest
+
+The authors declare having no competing interests.
 
 \FloatBarrier
 
