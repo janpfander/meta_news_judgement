@@ -1,0 +1,43 @@
+# Detailed search strings {#lit-review}
+
+\FloatBarrier 
+
+## First database search
+
+For our initial database search, we used the following search strings: 
+
+- Scopus: 
+  '"false news" OR "fake news" OR "false stor\*" AND "accuracy" OR "discernment" OR "credibilit\*" OR "belief" OR "susceptib\*"'
+  
+  Given the initially high volume of papers (12425), we added restrictions to only include articles that were likely (i) experimental, (ii) and exposed participants to both true and false news (addition to search string: 'AND ( LIMIT-TO ( LANGUAGE , "English" ) ) AND ( LIMIT-TO ( DOCTYPE , "ar" ) OR LIMIT-TO ( DOCTYPE , "cp" ) ) AND ( EXCLUDE ( SUBJAREA , "PHYS" ) OR EXCLUDE ( SUBJAREA , "MATE" ) OR EXCLUDE ( SUBJAREA , "BIOC" ) OR EXCLUDE ( SUBJAREA , "ENER" ) OR EXCLUDE ( SUBJAREA , "IMMU" ) OR EXCLUDE ( SUBJAREA , "AGRI" ) OR EXCLUDE ( SUBJAREA , "PHAR" ) OR EXCLUDE ( SUBJAREA , "HEAL" ) OR EXCLUDE ( SUBJAREA , "EART" ) OR EXCLUDE ( SUBJAREA , "NURS" ) OR EXCLUDE ( SUBJAREA , "CHEM" ) OR EXCLUDE ( SUBJAREA , "CENG" ) OR EXCLUDE ( SUBJAREA , "VETE" ) OR EXCLUDE ( SUBJAREA , "DENT" ) ) AND ( EXCLUDE ( SUBJAREA , "COMP" ) OR EXCLUDE ( SUBJAREA , "ENGI" ) OR EXCLUDE ( SUBJAREA , "MATH" ) OR EXCLUDE ( SUBJAREA , "MEDI" )')
+
+- Google Scholar: '"Fake news" \| "False news"\|"False stor\*" "Accuracy" \| "Discernment"\|"Credibility"\|"Belief"\|"Suceptib\*", no citations, no patents'
+
+## Second database search
+
+For our second database search during revisions, we used the following search strings: 
+
+- Scopus: 
+  'TITLE-ABS-KEY ( ( “false news” OR “fake news” OR “false stor*” OR “misinformation” OR “disinformation” ) AND ( “accuracy” OR “discernment” OR “credibilit*” OR “belief” OR “suceptib*” OR “reliab*” OR “vulnerabi*” ) ) AND ( EXCLUDE ( SUBJAREA , “DENT” ) OR EXCLUDE ( SUBJAREA , “CHEM” ) OR EXCLUDE ( SUBJAREA , “VETE” ) OR EXCLUDE ( SUBJAREA , “CENG” ) OR EXCLUDE ( SUBJAREA , “EART” ) OR EXCLUDE ( SUBJAREA , “AGRI” ) OR EXCLUDE ( SUBJAREA , “PHAR” ) OR EXCLUDE ( SUBJAREA , “MATH” ) OR EXCLUDE ( SUBJAREA , “ENGI” ) OR EXCLUDE ( SUBJAREA , “MEDI” ) OR EXCLUDE ( SUBJAREA , “NURS” ) OR EXCLUDE ( SUBJAREA , “HEAL” ) OR EXCLUDE ( SUBJAREA , “IMMU” ) OR EXCLUDE ( SUBJAREA , “BIOC” ) OR EXCLUDE ( SUBJAREA , “MATE” ) OR EXCLUDE ( SUBJAREA , “PHYS” ) OR EXCLUDE ( SUBJAREA , “ECON” ) OR EXCLUDE ( SUBJAREA , “ENER” ) OR EXCLUDE ( SUBJAREA , “COMP” ) ) AND ( LIMIT-TO ( DOCTYPE , “ar” ) OR LIMIT-TO ( DOCTYPE , “ch” ) OR LIMIT-TO ( DOCTYPE , “cp” ) ) AND ( LIMIT-TO ( LANGUAGE , “English” ) )'
+
+
+- Google Scholar: 
+  '"false news" OR "fake news" OR "false stor*" OR "misinformation" OR "disinformation" ) AND ( "accuracy" OR "discernment" OR "credibilit*" OR "belief" OR "suceptib*" OR "reliab*" OR "vulnerabi*" ) , no patents'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

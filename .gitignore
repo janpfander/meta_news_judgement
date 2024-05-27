@@ -1,0 +1,29 @@
+# R stuff
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+
+# knitr and caching stuff
+*_files
+*output
+/*data*
+*.docx
+*.log
+
+# but do track...
+!*.R 
+
+# add "simulation" scripts
+!*.Rmd
+!*.md
+
+# remove non-anonymized files
+Pfander*
+
+# remove
+/no_git
+
+
+

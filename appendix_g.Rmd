@@ -1,0 +1,227 @@
+# Selection bias {#selection-bias}
+
+Skepticism bias could be an artifact of biased news selection for experiments. For example, one might suspect researchers to pick easy-to-detect false news and/or hard-to-detect true news (e.g. to avoid ceiling effects), thus inflating participants' skepticism of true news.
+
+We believe that if there is such a bias, it is likely most relevant for the false news category. That is because we observe similar average accuracy ratings for true news in three studies (one of which included in our meta-analysis, namely @garrettConservativesSusceptibilityPolitical2021) that randomly sampled true news from high-quality mainstream news sites. These samples of headlines are free of any selection bias that may originate from researchers selecting not obviously accurate true headlines. @stewartDistortingEffectsProducer2021 used CrowdTangle to automatically scrap 500 headlines from 20 mainstream news sites and had participants rate the accuracy of these headlines. 
+```{r}
+# calculate scaled version of Stewart et al. (2021)
+stewart <- (5.05 - 1)  / (7 - 1)
+
+# calculate scaled version of Hohenberg
+hohenberg <- meta_wide %>% 
+  select(ref, mean_accuracy_true, sd_accuracy_true, accuracy_scale_numeric) %>% 
+  filter(ref == "Hohenberg_2023") %>% 
+  mutate(scaled_mean = (mean_accuracy_true - 1) / (accuracy_scale_numeric - 1), 
+         scaled_sd_accuracy_true = sd_accuracy_true / (accuracy_scale_numeric - 1)) %>% 
+  round_numbers()
+
+# calculate numbers for Garret
+garrett <- meta_wide %>% 
+  select(ref, mean_accuracy_true, sd_accuracy_true, accuracy_scale_numeric) %>% 
+  filter(ref == "Garrett_2021") %>% 
+  mutate(scaled_mean = (mean_accuracy_true - 1) / (accuracy_scale_numeric - 1), 
+         scaled_sd_accuracy_true = sd_accuracy_true / (accuracy_scale_numeric - 1)) %>% 
+  summarise(
+    accuracy_scale_numeric = mean(accuracy_scale_numeric),
+    mean_accuracy_true = mean(mean_accuracy_true),
+    sd_accuracy_true = mean(sd_accuracy_true),
+    scaled_mean = mean(scaled_mean), 
+    scaled_sd_accuracy_true = mean(scaled_sd_accuracy_true)) %>% 
+  round_numbers()
+
+# calculate numbers for Shirikov
+shirikov <- meta_wide %>% 
+  filter(ref == "Shirikov_2024") %>% 
+  summarise(
+    accuracy_scale = unique(accuracy_scale),
+    mean_accuracy_true = mean(mean_accuracy_true),
+    sd_accuracy_true = mean(sd_accuracy_true)) %>% 
+  round_numbers()
+
+# calculate numbers for Aslett
+aslett <- meta_wide %>% 
+  filter(ref == "Aslett_2024") %>% 
+  mutate(scaled_mean = (mean_accuracy_true - 1) / (accuracy_scale_numeric - 1), 
+         scaled_sd_accuracy_true = sd_accuracy_true / (accuracy_scale_numeric - 1)) %>% 
+  summarise(
+    accuracy_scale_numeric = mean(accuracy_scale_numeric),
+    mean_accuracy_true = mean(mean_accuracy_true),
+    sd_accuracy_true = mean(sd_accuracy_true),
+    scaled_mean = mean(scaled_mean), 
+    scaled_sd_accuracy_true = mean(scaled_sd_accuracy_true)) %>% 
+  round_numbers()
+  
+# check effects of Luo and Hohenberg studies
+# bind_rows(
+# error_effect %>% 
+#   mutate(conf_low = yi - 1.96*sqrt(vi), 
+#          conf_high = yi + 1.96*sqrt(vi), 
+#          outcome = "error") %>% 
+#   select(ref, unique_sample_id, yi, conf_low, conf_high, outcome) %>% 
+#   filter(grepl("Luo", ref) | grepl("Hohenberg", ref)), 
+# accuracy_effect %>% 
+#   mutate(conf_low = yi - 1.96*sqrt(vi), 
+#          conf_high = yi + 1.96*sqrt(vi), 
+#          outcome = "accuracy") %>% 
+#   select(ref, unique_sample_id, yi, conf_low, conf_high, outcome) %>% 
+#   filter(grepl("Luo", ref) | grepl("Hohenberg", ref))
+# )
+```
+
+The mean accuracy rating of these headlines was 5.05 (sd = 0.56) on a 7-point scale, or `r stewart` if we transpose the scale to reach from 0 to 1. This is similar to our (unweighed) average true news rating (`r  descriptives$data_descriptive_plot$true$mean_value`) when scaling effect sizes to range from 0 to 1 (see Fig. \@ref(fig:descriptive)). Similarly, @clemmvonhohenbergTruthBiasLeft2023 automatically scraped true headlines using the Google News API. On a 7-point scale, the average true news rating was `r hohenberg$mean_accuracy_true` (sd = `r hohenberg$sd_accuracy_true`), or `r hohenberg$scaled_mean` on a scale from 0 to 1. In a panel study over six months, @garrettConservativesSusceptibilityPolitical2021 used the NewsWhip API to automatically scrap timely news headlines, selecting the most popular ones on social media. On a 4-point scale, the average true news rating was `r garrett$mean_accuracy_true` (sd = `r garrett$sd_accuracy_true`), or `r garrett$scaled_mean` on a scale from 0 to 1. However, note that a study in a Russian news context finds lower accuracy ratings for true news than the average in our meta-analysis: @shirikovFakeNewsAll2024 used web scraping to automatically download top news stories on politics and international news from Yandex News (Russia's largest news aggregator). Across the two studies, true news stories selected with this process were rated as true only 48% of the time ( mean on binary scale = `r shirikov$mean_accuracy_true`, sd = `r shirikov$sd_accuracy_true`). 
+
+If not for true news, it seems likely that our results are affected by a selection bias for false news. Three studies included in our meta-analysis [@garrettConservativesSusceptibilityPolitical2021; @aslettOnlineSearchesEvaluate2024; @allenScalingFactcheckingUsing2021] automated their news selection by scraping headlines from media outlets. Fact-checkers hired by the researchers (or the researchers themselves, in the case of @garrettConservativesSusceptibilityPolitical2021) would establish their veracity. These studies are less biased in their news selection, and let participants rate news in real time (i.e. when news arguably matter most to people). As shown in Figure \@ref(fig:forest-automated), the effect sizes extracted from these studies show that participants, on average, discerned between true and false headlines, but that they were better at rating true headlines as true than false headlines as false (suggesting a negative skepticism bias, i.e. a credulity bias).
+
+(ref:forest-automated) Forest plots for discernment and skepticism  bias, for the three studies using automated news selection. Effects are weighed by their sample size. Effect sizes are calculated as Cohen's d. Horizontal bars represent 95% confidence intervals. The average estimate (black diamond shape at the bottom of the figure) is the result of a multilevel meta model with clustered standard errors at the sample level.
+
+```{r forest-automated, echo=FALSE, fig.cap="(ref:forest-automated)"}
+# select studies
+automated_papers = c("Garret_2021", "Aslett_2024", "Allen_2021")
+
+automated_samples_accuracy <- accuracy_effect %>% 
+    filter(selection_fake_news == "automated")  %>% 
+  mutate(ci_low = yi - 1.96*sqrt(vi), 
+         ci_high = yi + 1.96*sqrt(vi)
+         )%>%
+  arrange(ref, desc(yi)) %>%
+  mutate(position = 7:(6+nrow(.))) %>% 
+  mutate(measure = "Discernment")
+
+automated_samples_error <- error_effect %>% 
+    filter(selection_fake_news == "automated") %>% 
+  mutate(ci_low = yi - 1.96*sqrt(vi), 
+         ci_high = yi + 1.96*sqrt(vi)
+         )%>%
+  arrange(ref, desc(yi)) %>%
+  mutate(position = 7:(6+nrow(.))) %>% 
+  mutate(measure = "Skepticism bias") 
+
+# combine dataframe for forest plot
+forest_data <- bind_rows(automated_samples_accuracy,
+                               automated_samples_error)
+
+# Models using Cohen's d
+automated_samples_accuracy_model <- calculate_models(data=automated_samples_accuracy, robust = TRUE)
+
+automated_samples_error_model <- calculate_models(data=automated_samples_error, robust = TRUE)
+
+
+# model outcome
+model_data <- bind_rows(
+  data.frame(
+  yi = automated_samples_accuracy_model$beta,
+  ci_low = automated_samples_accuracy_model$ci.lb,
+  ci_high = automated_samples_accuracy_model$ci.ub, 
+  measure = "Discernment"
+  ),
+  data.frame(
+  yi = automated_samples_error_model$beta,
+  ci_low = automated_samples_error_model$ci.lb,
+  ci_high = automated_samples_error_model$ci.ub, 
+  measure = "Skepticism bias"
+  )
+  ) %>% 
+  mutate_if(is.numeric, round, digits = 2) %>%
+  mutate(label = paste0(yi, " [", ci_low, ", ", ci_high, "]"))
+
+# Pre-order the data frame within each group and use factor to maintain order
+# forest_data <- forest_data %>%
+#   arrange(ref, desc(yi)) %>%
+#   mutate_if(is.numeric, round, digits = 2) %>% 
+#   mutate(id = factor(id, levels = unique(id)), 
+#          value = paste0(yi, " [", ci_low, ", ", ci_high, "]"))
+
+# Plot using ggplot
+ggplot(forest_data, aes(x = yi, y = position, xmin = ci_low, xmax = ci_high, color = ref)) +
+  geom_pointrange(size = 0.2) +
+  geom_pointrange(data = model_data, 
+                  aes(x = yi, y = 0, xmin = ci_low, 
+                      xmax = ci_high), 
+                  shape = 5,
+                  inherit.aes = FALSE) + 
+  geom_text(data = model_data, 
+            aes(x = yi, y = -5, 
+                label = label), 
+            vjust = 0, hjust = "center", size = 3, inherit.aes = FALSE) + 
+  scale_color_viridis_d(option = "plasma", name = "Article", 
+                        begin = 0.5, end = 0.9) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(x = "Cohen's D", y = "Study") +
+  plot_theme + 
+  theme(legend.position = "left",
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank()) + 
+  facet_wrap(~measure, scales = "free")
+
+```
+
+```{r}
+# There might be an argument to make here, but not yet clear enough
+
+# Which result - the positive, skeptical skepticism  bias of our meta-analysis or the negative, gullible skepticism  bias of @aslettEcologicallyExternallyValid2023 - deserves more attention? This depends on the population of false news that we want to draw inferences on. While we can only speculate, we think that the sample of false news of @aslettEcologicallyExternallyValid2023 is more representative of the population of false news as they get published (at least in a US context). However, there is a chance that the sample of false news in our meta analysis is more representative of the population of false news as they get consumed. This distinction between production and consumption matters, because the average person is not much exposed to the hyperpartisan and fringe media outlets, but mostly mainstream media (REF). It seems therefore reasonable to assume that the average person encounters only exceptionally popular false news, and probably at a stage where they are already debunked by fact-checking websites. 
+```
+
+One explanation of the discrepancies between the findings of @garrettConservativesSusceptibilityPolitical2021,  @aslettOnlineSearchesEvaluate2024 and @allenScalingFactcheckingUsing2021 on the one side, and the findings of our meta-analysis on the other, is that fact-checking websites pick more easy-to-fact-check misinformation. In that case, many false news included in the three studies would have never appeared on fact-checking websites, and are therefor quite different from the selection of false news in other studies included in our meta-analysis^[It is unlikely that this difference is due to timeliness of the three studies: @aslettOnlineSearchesEvaluate2024 found that participants were better at decking false news within 48 hours of publication compared to 3 months or more after.]. But note that, although plausible, it is not clear whether the observed discrepancies are in fact driven by the selection of false news. For example, in the case of @garrettConservativesSusceptibilityPolitical2021, a reasonable candidate for a confounder is political concordance (see below). In their large panel study included in our meta-analysis, @garrettConservativesSusceptibilityPolitical2021 relied on automatically scraped popular headlines and classified coded their political concordance. As shown in table \@ref(tab:garrett-table), a moderator analysis suggests that the overall negative skepticism bias (i.e. the credulity bias) is at least partially driven by political concordance. Contrary to the findings in our meta-analysis (including data from @garrettConservativesSusceptibilityPolitical2021), their participants showed a strong tendency towards credulity when news headlines were concordant with their political stance, while only being slightly credulous when facing politically discordant headlines.
+
+```{r garrett-table}
+# Calculate results for Garrett study
+garrett <- meta_wide %>% 
+  filter(ref == "Garrett_2021")
+
+# calculate main effect sizes (Cohen's d, following Cochrane) 
+garrett_accuracy_effect <- calculate_effect_sizes(effect = "accuracy", measure = "Cochrane", 
+                                          data = garrett)
+garrett_error_effect <- calculate_effect_sizes(effect = "error", measure = "Cochrane", 
+                                       data = garrett)
+
+# Models using Cohen's d
+garrett_model_accuracy <- calculate_models(data=garrett_accuracy_effect, robust = TRUE)
+garrett_model_error <- calculate_models(data=garrett_error_effect, robust = TRUE)
+
+# make a plot for political concordance 
+# calculate models
+garrett_concordance_accuracy <- metafor::rma.mv(yi, 
+                                                vi, 
+                                                mods = ~political_concordance,
+                                                data=garrett_accuracy_effect)
+garrett_concordance_error <- metafor::rma.mv(yi, 
+                                                vi, 
+                                                mods = ~political_concordance,
+                                                data=garrett_error_effect)
+
+# Results table
+modelsummary::modelsummary(list("Discernment" = garrett_model_accuracy, 
+                                "Skepticism  bias" = garrett_model_error,
+                                "Discernment" = garrett_concordance_accuracy, 
+                                "Skepticism  bias" = garrett_concordance_error,
+                                "Discernment" = robust_model_accuracy, 
+                                "Skepticism  bias" = robust_model_error),
+                           title = 'Model results', 
+                           stars = TRUE, 
+                           coef_rename = c("overall" = "Estimate (intercept)", 
+                                           "intercept" = "Estimate (intercept)",
+                                           "political_concordancediscordant" = "Political Concordance : Discordant (vs. Concordant)")
+                           ) %>%
+  add_header_above(c(" " = 1, "Garrett & Bond, 2021" = 4, "Main results" = 2)) %>%
+  # make smaller to fit
+  kable_styling(latex_options = "scale_down") %>%
+  footnote(general = "Results from a meta-analysis of the panel study by Garrett & Bond 2021. The results for the moderator analysis for political concordance are based on less observations than the overal analysis, because the latter includes politically neutral headlines and participants who did identify as neither democrat nor republican. For reference, we included the mains results from the meta-analysis (including the study by Garrett and Bond)."
+           , threeparttable = TRUE)
+```
+
+```{r}
+# get predictions for skepticism bias from moderator results
+intercept <- coef(garrett_concordance_error)[[1]]
+
+garrett_predictions <- garrett_concordance_error %>% 
+  tidy(conf.int=TRUE) %>% 
+  mutate(
+    political_concordance = ifelse(term == "intercept", "concordant", "discordant"), 
+    # make sure to add the value of the intercept to have the predicted value
+    # instead of the differential
+    across(c(estimate, conf.low, conf.high), ~ifelse(term == "intercept", .x, 
+                                                     .x + intercept), 
+           .names = "predicted_{.col}")
+  )
+```
+

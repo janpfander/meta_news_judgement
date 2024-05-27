@@ -1,0 +1,505 @@
+# Individual level data {#individual-level}
+
+\FloatBarrier  
+
+```{r individual-data, message=FALSE}
+# load data
+individual_level_subset <- read_csv("data/individual_level_subset.csv")
+
+# compute standardized accuracy and error measures 
+individual_level_subset <- individual_level_subset %>% 
+  # remove binary scales and treatment conditions
+  filter(scale != "binary" & condition == "control") %>% 
+  # remove NA's for accuracy
+  drop_na(accuracy) %>% 
+  # identify unique samples
+  mutate(unique_sample_id = paste(paper_id, sample_id, sep = "_"),
+         # make an ungrouped versions just for comparison
+         ungrouped_std_acc = accuracy/sd(accuracy), 
+         ungrouped_std_err = error/sd(accuracy),
+         # make a unique id for all participants
+         unique_subject_id = paste0(unique_sample_id, id)
+         ) %>% 
+  # group by unique samples
+  group_by(unique_sample_id) %>% 
+  # calculate standardized accuracy measure
+  mutate(accuracy_std = accuracy/sd(accuracy), 
+         error_std = error/sd(accuracy)) %>% 
+  # ungroup
+  ungroup()
+
+individual_level_continuous <- individual_level_subset %>% 
+  summarise(n_papers = n_distinct(paper_id), 
+            n_subjects = n_distinct(unique_participant_id),
+            n_observations = n_distinct(observation_id))
+```
+
+We compare the results of our main meta model to the individual-level data with the following procedure: First, we restrict our data to (i) only studies using a non-binary response scale and (ii) only those studies that we have individual-level data on. This subset consists of `r individual_level_continuous$n_papers` articles ($N_{Participants}$ = `r individual_level_continuous$n_subjects`, $N_{Observations}$ = `r individual_level_continuous$n_observations`). Second, we run the same meta-analytic model as in the main analysis on the effect sizes of that subset of studies. Third, we take the individual-level data of that subset of studies and run a mixed model on it.
+
+The meta-model estimates are standardized. To be able to compare results, we standardized participants' accuracy ratings in the individual-level data as follows: Within each sample, we calculated the standard deviation of accuracy ratings (false and true news combined). Then, for each sample, we divided accuracy ratings by the respective standard deviation.
+
+We use the `lme4` package [@batesFittingLinearMixedEffects2015] and its `lmer()` function to run the mixed models. The mixed models include random effects by participant (each participant provides several ratings for both true and false news) and by sample for both the intercept and the effect of veracity. In our models, participants are nested in samples.
+
+As shown in Fig. \@ref(fig:individual-vs-meta), this individual-level analysis yields an estimate very similar to our meta-analytic average. 
+
+```{r reduce-data}
+# These steps are to identify those studies that we have raw data on in the 
+# meta data and subset that data accordingly. 
+
+# Step 1: extract `unique_sample_id` for samples in raw data
+raw_data_samples <- individual_level_subset %>%
+  reframe(unique(unique_sample_id)) %>% 
+  pull()
+
+# Step 2: filter the meta data frame
+# We want to reduce our data to continuous measure samples that we have raw data on
+reduce_samples <- function(data) {
+  
+    results <- data %>% 
+      filter(unique_sample_id %in% all_of(raw_data_samples))
+}
+# for accuracy
+reduced_accuracy_effect <- reduce_samples(accuracy_effect)
+# for error
+reduced_error_effect <- reduce_samples(error_effect)
+```
+```{r}
+# a couple of participants with only one observation
+# individual_level_subset %>% 
+#   group_by(unique_subject_id) %>% 
+#   summarize(n_observations = n()) %>% 
+#   group_by(n_observations) %>% 
+#   summarize(n_subjects = n_distinct(unique_subject_id))
+
+# # identify samples with only one observation
+# individual_level_subset %>% 
+#   group_by(unique_sample_id) %>% 
+#   summarize(n_observations = n()) %>% 
+#   filter(n_observations == 6) %>% 
+#   select(unique_sample_id) %>% 
+#   pull()
+# 
+# # identify id's with only one observation
+# individuals_with_1_observation <- individual_level_subset %>% 
+#   group_by(unique_subject_id, id, unique_sample_id) %>% 
+#   summarize(n = n()) %>% 
+#   filter(n == 1) %>% 
+#   select(unique_subject_id) %>% 
+#   pull()
+# 
+# 
+# # remove those participants
+# individual_level_subset <- individual_level_subset %>% 
+#   filter(!unique_subject_id %in% individuals_with_1_observation)
+```
+
+```{r individual-models}
+# Run linear mixed model with random slope and intercept for subject id nested in sample id
+
+# note that since this takes rather long, we stored the results
+
+file_name <- "individual-level_results.csv" # change for new analyses / or delete file to re-use same name
+
+if (!file.exists(paste0("data/", file_name))) { 
+  
+  # Discernment
+  
+# Running this model takes ~1min on my computer
+time <- system.time({
+  individual_level_accuracy <- lmer(accuracy_std ~ 1 + veracity + 
+                                      (1 + veracity | unique_sample_id) +
+                                      (1 + veracity | unique_sample_id:id),
+                                    data = individual_level_subset
+                                    ) %>% 
+    tidy(conf.int = TRUE) %>% 
+    mutate(model = "individual level", 
+           outcome = "accuracy") %>% 
+    # select only effect of interest
+    filter(term == "veracitytrue")
+})
+
+print(paste("Elapsed time: ", round(time[3]/60, digits = 2), " minutes"))
+
+# note that this is is the same as crossed random effects
+# individual_level_accuracy_crossed <- lmer(accuracy_std ~ 1 + veracity +
+#                                  (1 + veracity | unique_sample_id) +
+#                                    (1 + veracity | unique_subject_id),
+#                 data = individual_level_subset 
+#                 %>% slice(1:200000)
+#                 ) %>%
+#   tidy(conf.int = TRUE) %>%
+#   mutate(model = "individual level",
+#          outcome = "accuracy") %>%
+#   # select only effect of interest
+#   filter(term == "veracitytrue")
+# individual_level_accuracy_crossed
+
+# Skepticism
+
+  # Running this model takes ~1min on my computer
+time <- system.time({
+  individual_level_error <- lmer(error_std ~ 1 + veracity + 
+                                      (1 + veracity | unique_sample_id) +
+                                      (1 + veracity | unique_sample_id:id),
+                                    data = individual_level_subset
+                                    ) %>% 
+    tidy(conf.int = TRUE) %>% 
+    mutate(model = "individual level", 
+           outcome = "error") %>% 
+    # select only effect of interest
+    filter(term == "veracitytrue")
+})
+
+print(paste("Elapsed time: ", round(time[3]/60, digits = 2), " minutes"))
+
+data <- bind_rows(individual_level_accuracy, individual_level_error)
+  
+# export as .csv  
+write_csv(data, paste0("data/", file_name))
+}
+
+# read model data from .csv files
+model_data <- read_csv(paste0("data/", file_name))
+
+individual_level_error <- model_data %>% 
+  filter(outcome == "error")
+
+individual_level_accuracy <- model_data %>% 
+  filter(outcome == "accuracy")
+```
+
+```{r reduced-meta-models}
+# Run the meta model on reduced data 
+reduced_accuracy <- robust(metafor::rma.mv(yi, vi, 
+                                  random = ~ 1 | unique_sample_id / 
+                                    observation_id, data = reduced_accuracy_effect ),
+                  cluster = reduced_accuracy_effect$unique_sample_id
+) %>% 
+  tidy(conf.int = TRUE) %>% 
+  mutate(model = "reduced meta", 
+         outcome = "accuracy")
+
+reduced_error <- robust(metafor::rma.mv(yi, vi, 
+                                  random = ~ 1 | unique_sample_id / 
+                                    observation_id, data = reduced_error_effect ),
+                  cluster = reduced_error_effect$unique_sample_id
+) %>% 
+  tidy(conf.int = TRUE) %>% 
+  mutate(model = "reduced meta", 
+         outcome = "error")
+```
+
+(ref:individual-vs-meta) Comparison of meta to individual level analysis (continuous scales only). "Meta" corresponds to the main results reported in the paper; "meta reduced" are the same meta-analytic models as in the main analysis but run on the subset of studies for which we have individual level data; "individual-level" corresponds to the result of mixed effect models run on the individual-level data. Symbols represent estimates, horizontal bars 95% confidence intervals. 
+
+```{r individual-vs-meta, fig.cap="(ref:individual-vs-meta)"}
+# We store the results of all analyses in a single data frame
+comparison <- bind_rows(
+  # models individual level data 
+  individual_level_accuracy, 
+  individual_level_error,
+  # models on reduced data
+  reduced_accuracy, 
+  reduced_error,
+  # main models
+  robust_model_accuracy %>% 
+    tidy(conf.int = TRUE) %>% 
+    mutate(model = "meta", 
+           outcome = "accuracy"), 
+  robust_model_error %>% 
+    tidy(conf.int = TRUE) %>% 
+    mutate(model = "meta", 
+           outcome = "error")) %>% 
+  round_numbers() %>% 
+  mutate(
+    # give a nicer name to the estimate
+    term = "estimate", 
+    # extract confidence intervals
+    ci = glue::glue("[{conf.low}, {conf.high}]"),
+    # Change outcome names
+    outcome = ifelse(outcome == "accuracy", "Discernment", "Skepticism  bias")
+  )
+
+# plot results
+ggplot(comparison,
+       aes(x = estimate, y = model, shape = model, linetype = model)) +
+  geom_vline(xintercept = 0, linewidth = 0.5, linetype = "24", color = "grey") +
+  geom_pointrange(aes(xmin = conf.low, xmax = conf.high, color = model),
+                  position = position_dodge(width = -0.6)) +
+    # Add geom_text layer
+  geom_text(aes(label = paste0(estimate," ", ci)), position = position_dodge(), vjust = -1.2) + 
+  labs(x = "Standardized effect estimate", y = NULL, linetype = NULL,
+       shape = NULL, color = NULL) +
+  scale_color_viridis_d(option = "plasma", end = 0.9) +
+  scale_x_continuous(limits = c(0, 1.6)) +
+  plot_theme +
+  theme(legend.position = "bottom",
+        axis.text.y = element_blank(),
+        strip.text = element_text(size = 14)) +
+  facet_wrap(~outcome)
+
+```
+
+## How skilled were individual participants?
+
+In our meta analysis, we find that people discern well between true and false news - on average. But how skilled are individual participants? 
+
+There are two ways to go about this: (i) How good were individual participants in discerning true from false?, and (ii) How good were individual participants in correctly judging the veracity of news? 
+
+As for the former, we have provided an answer in the main analysis (see Fig. \@ref(fig:individual-level-plot)). Here, we report the absolute number of individuals with a positive vs. negative discernment and skepticism  bias score in Table \@ref(tab:individuals-direction).
+
+```{r individuals-direction}
+# load data
+individual_level_subset <- read_csv("data/individual_level_subset.csv")
+
+# compute standardized accuracy and error measures 
+outcomes_by_participant <- individual_level_subset %>% 
+  # remove binary scales and treatment conditions
+  filter(condition == "control") %>% 
+  # remove NA's for accuracy
+  drop_na(accuracy) %>% 
+  mutate(
+      # standardize_accuracy
+      across(c(accuracy), 
+             ~ifelse(
+               # Binary and 0 to 1 scale are already on the wanted scale
+               scale == "binary" |
+                 scale == "1", .x, 
+               # for all other numeric scales
+               (.x-1)  / (scale_numeric - 1)), 
+             .names = "std_{col}"),
+      # standardize_error
+      across(c(error), 
+             ~ifelse(
+               # Binary and 0 to 1 scale are already on the wanted scale
+               scale == "binary" |
+                 scale == "1", .x, 
+               # for all other numeric scales
+               .x  / (scale_numeric - 1)), 
+             .names = "std_{col}"), 
+  ) %>% 
+  # calculate averages scores per participant and veracity
+  group_by(unique_participant_id, veracity) %>%
+  summarize(mean_std_accuracy = mean(std_accuracy), 
+         mean_std_error = mean(std_error),
+  ) %>% 
+  # turn data frame into wide format to be able to calculate discernment
+  pivot_wider(names_from = veracity, 
+              values_from = c(mean_std_accuracy, mean_std_error)) %>% 
+  # calculate discernment and skepticism  bias
+  mutate(discernment = mean_std_accuracy_true - mean_std_accuracy_fake, 
+         response_bias = mean_std_error_true - mean_std_error_fake) %>% 
+  ungroup()
+
+# shape data to long format
+data <- outcomes_by_participant %>% 
+  pivot_longer(c(discernment, response_bias),
+               names_to = "outcome", 
+               values_to = "value") %>% 
+  # make nicer names
+  mutate(outcome = ifelse(outcome == "discernment", "Discernment", 
+                          "Skepticism  bias"))
+
+# table 
+table <- data %>% 
+  drop_na(value) %>% 
+  mutate(value = ifelse(value > 0, "positive", "negative")) %>% 
+  group_by(value, outcome) %>% 
+  summarize(n_subj = n_distinct(unique_participant_id)) %>% 
+    pivot_wider(names_from = outcome, 
+              values_from = n_subj) %>% 
+  # relative frequency
+  ungroup() %>% 
+  mutate(
+    rel_discernment = Discernment / sum(Discernment),
+    rel_response_bias = `Skepticism  bias` / sum(`Skepticism  bias`)
+    ) %>% 
+  mutate_if(is.numeric, round, digits = 3) %>% 
+  # add brackets around relative values
+  mutate(across(c(rel_discernment, rel_response_bias), ~paste0("(", .x, ")"))) %>% 
+      # unite absolute and relative values in the same variable
+  mutate(Discernment = paste0(Discernment, " ", rel_discernment), 
+         `Skepticism  bias` = paste0(`Skepticism  bias`, " ", rel_response_bias)
+         ) %>% 
+  select(value, Discernment, `Skepticism  bias`) %>% 
+  column_to_rownames(var = "value") 
+
+table %>% 
+  apa_table(note = "Frequency table of total number of participants that had a positive or negative score for both outcomes.")
+```
+
+To answer the latter question, 'How good were individual participants in correctly judging the veracity of news?', we collapsed all likert scales into binary ones. For example, on a 4-point scale, we coded responses of 1 and 2 as not accurate (0) and 3 and 4 as accurate (1). For scales, with a mid-point (example 3 on a 5-point scale), we coded midpoint answers as NA. For each participant, we then identified the instances in which individuals classify news judgments correctly (i.e. false news as false and true news as true), and calculate the share of correct judgments among all judgments. For example, a participant rating one true news item as true and one fake news item as true has a share of correct judgments of 50%. Fig. \@ref(fig:collapsed-individual-correct) shows the cumulative percentage of participants for different shares of correct judgments.   
+
+```{r collapsed-individual-data-correct, message=FALSE}
+# load individual level data
+individual_level_subset <- read_csv("data/individual_level_subset.csv") %>% 
+  filter(condition == "control") %>% 
+  # collapse accuracy scores to binary (if not already binary)
+  mutate(
+    # add helper variable that indicates scales with midpoint
+    midpoint_scale = ifelse(scale_numeric %% 2 != 0, TRUE, FALSE),
+    accuracy = case_when(
+      # keep binary scores
+      scale == "binary"~accuracy, 
+      # code midpoints as NA,
+      midpoint_scale == TRUE & 
+        accuracy == (scale_numeric/2)+0.5 ~ NA,
+      # transform continuous scores
+      accuracy <= scale_numeric/2 ~ 0, 
+      accuracy > scale_numeric/2 ~ 1, 
+      TRUE ~ NA)
+  ) %>% 
+  # calculate correct judgement per participants
+  mutate(
+    # make helper variable for veracity
+    veracity_numeric = ifelse(veracity == "true", 1, 0),
+    # make `correct` variable
+    correct = ifelse(veracity_numeric == accuracy, 1, 0)) %>% 
+  # calculate average per participant
+  group_by(unique_participant_id) %>%
+  summarize(n_items = n(), 
+            n_correct = sum(correct, na.rm = TRUE), 
+            share_correct = n_correct / n_items
+            ) %>% 
+  arrange(share_correct) %>% 
+  # cumulative percentage
+  mutate(
+    rank = 1:nrow(.),
+    cumulative_percentage = (rank/max(rank))*100
+    ) %>% 
+  # for highlighting in plot
+  mutate(highlight = case_when(share_correct <= 0.5 ~ "At chance or worse",
+                               cumulative_percentage >= 50 ~ "Best 50% of participants", 
+                               TRUE ~ NA_character_)
+         ) %>% 
+  # for extracting the value for the label
+  group_by(highlight) %>% 
+  mutate(min_share_correct = round(min(share_correct), digits = 4)) %>% 
+  ungroup() %>% 
+  mutate(highlight = ifelse(highlight == "Best 50% of participants", 
+                            paste0("Best 50% of participants \n (correct at least ", 
+                                   100*min_share_correct, " % of the time)"), 
+                            highlight)
+         )
+
+# make summarized data to highlight passages in graph 
+highlight_data <- individual_level_subset %>% 
+  filter(!is.na(highlight)) %>% 
+group_by(highlight) %>% 
+  summarize(max_cumulative_percentage = max(cumulative_percentage),
+            min_cumulative_percentage = min(cumulative_percentage), 
+            max_share_correct = max(share_correct), 
+            min_share_correct = min(share_correct), 
+            ) %>% 
+  mutate(cumulative_percentage = ifelse(highlight == "At chance or worse", 
+                                        max_cumulative_percentage, 
+                                        min_cumulative_percentage),
+         share_correct = ifelse(highlight == "At chance or worse", 
+                                        max_share_correct, 
+                                        min_share_correct), 
+         # y_nudge for position of text in plot
+         y_position = ifelse(highlight == "At chance or worse", 
+                             cumulative_percentage - cumulative_percentage/2, 
+                             cumulative_percentage + cumulative_percentage/2),
+         # x_nudge for position of text in plot
+         x_position = 0.6*share_correct, 
+         # rounded version for labeling
+         label = round(cumulative_percentage, digits = 1)
+         )
+```
+
+Only `r highlight_data$label[1]` % of participants were at chance or worse in judging the veracity of news items. The better 50% of participants were correct at least `r highlight_data$share_correct[2]*100` % of the time in their news judgments. 
+
+(ref:collapsed-individual-correct) Cumulative distribution of participants as a function of the quality of their news judgments (i.e. the share of correct judgments among all judgments for each participant). To read the graph, pick a share of correct judgments on the X-axis, go vertically to the curve, from the curve go horizontally to the y-axis and read the share of participants who performed exactly this well or worse.
+
+```{r collapsed-individual-correct, fig.cap="(ref:collapsed-individual-correct)"}
+# plot
+ggplot(individual_level_subset, aes(x = share_correct, y = cumulative_percentage, 
+                                    )) +
+  geom_line(color = "grey") +
+  geom_line(aes(color = highlight))+
+  labs(y = "Cumulative % of participants", 
+       x = "Share of correct news judgements", 
+       color = NULL) + 
+  # mark share of participants on y-axis
+  geom_segment(data = highlight_data,
+                 aes(x = 0, y = cumulative_percentage, 
+                     xend = share_correct, yend = cumulative_percentage), 
+               linetype = "dashed", color = "lightgrey"
+      ) + 
+  # add numbers to highlight lines
+  geom_label(inherit.aes = FALSE, data = highlight_data,
+             aes(x = x_position, y = y_position, 
+                 label = paste0(label, " %")),
+             alpha = 0.6,
+             color = "grey50", size = 3, show.legend = FALSE) +
+  # colors 
+  scale_color_viridis_d(option = "plasma", end = 0.9, 
+                        # remove the NA label
+                        na.translate=FALSE) +
+  scale_y_continuous(breaks = seq(from = 0, to = 100, by = 10)) +
+  plot_theme
+```
+
+Note that before, we found that only `r individual_level_valence$Discernment$negative$label` of people had a negative discernment score. How is that compatible with `r highlight_data$label[1]` % of people performing worse than chance? 
+
+```{r compare-individual-measures}
+table <- left_join(individual_level_subset, outcomes_by_participant) %>% 
+  mutate(Difference = case_when(share_correct <= 0.5 & 
+                                  discernment > 0 ~ "chance or worse but positive discernment",
+                                share_correct > 0.5 & 
+                                  discernment < 0 ~ "better than chance but negative discernment",
+                                TRUE ~ "same"
+  )) %>% 
+  group_by(Difference) %>% 
+  summarise(n_subjects = n_distinct(unique_participant_id))
+
+table %>% 
+  apa_table(note = "Frequency table of participants, grouped by whether the direction of their score differs between discernment and share of correct judgements")
+
+# for another overview, run:
+# left_join(individual_level_subset, outcomes_by_participant) %>% 
+#   mutate(discernment_binary = ifelse(discernment <= 0, 1, 0), 
+#          at_chance_or_worse = ifelse(share_correct <= 0.5, 1,0)) %>% 
+#   summarize(
+#     n_negative_discernment = sum(discernment_binary, na.rm = TRUE),
+#     n_at_chance_or_worse = sum(at_chance_or_worse, na.rm = TRUE), 
+#     n_total = n()
+#   ) %>% 
+#   mutate(difference_abs = n_at_chance_or_worse - n_negative_discernment, 
+#          difference_rel = difference_abs/n_total, 
+#          rel_neg_discernment = n_negative_discernment/n_total, 
+#          rel_at_chance_or_worse = n_at_chance_or_worse/n_total) %>% 
+#   pivot_longer(everything(),
+#                names_to = "variable", 
+#                values_to = "value")
+```
+
+That is because discernment and performing better than chance are distinct measurements. For example, people can be overall correct more than half of the time, but do worse for true news than for fake news. As shown in table \@ref(tab:compare-individual-measures), there are `r table$n_subjects[2]` participants performing at chance or worse, but have a positive discernment score nevertheless (compared to only `r table$n_subjects[1]` participants with a negative discernment score who performed better than chance).
+
+For a precise example, see Table \@ref(tab:single-participant-example). The participant correctly identified the veracity of 8 out of 14 news items. However, the participant performed better for fake news (7 out of 9 correct) then for true news (1 out of 5 correct), yielding a negative discernment score.
+
+```{r single-participant-example}
+# load data
+individual_level_subset <- read_csv("data/individual_level_subset.csv")
+
+individual_level_subset %>% 
+  # calculate correct judgement per participants
+  mutate(
+    # make helper variable for veracity
+    veracity_numeric = ifelse(veracity == "true", 1, 0),
+    # make `correct` variable
+    correct = ifelse(veracity_numeric == accuracy, 1, 0)
+    ) %>%
+  group_by(unique_participant_id, veracity) %>% 
+  summarise(n_accurate = sum(accuracy), 
+            mean_accurate = mean(accuracy),
+            n_correct = sum(correct),
+            n_ratings = n()) %>% 
+  filter(unique_participant_id == "Sultan_2022_1_90") %>% 
+  pivot_longer(n_accurate:n_ratings, 
+               names_to = "variable", 
+               values_to = "value") %>% 
+  round_numbers %>% 
+  apa_table(note = "Example of a single participant who rated news items on a binary scale and obtained a negative discernment score while performing better than chance.")
+```
+
