@@ -1,8 +1,0 @@
-CriterionID,Criterion_type,Definition
-1,Document type,"All literature with original data: peer reviewed papers, but also pre-prints (this implies unique data that is not otherwise already included in the analysis)"
-2,Research question,is about the perceived accuracy of fake AND true news
-3,Access,is the paper available
-4,Method,"measures accuracy or an equivalent construct (e.g. trustworthiness, truthfulness)"
-4.1,Method,provides all relevant summary statistics (i.e. accuracy ratings for both fake AND true news) or data to produce them; a mere discernment score is not enough
-4.2,Method,provides a clear control condition that is comparable with those of other studies
-5,Stimuli,real world news only
