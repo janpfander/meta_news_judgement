@@ -9,15 +9,18 @@
 *_files
 *output
 /*data*
+
+# file types
 *.docx
 *.log
+*.md
+*.html
 
 # but do track...
 !*.R 
 
 # add "simulation" scripts
 !*.Rmd
-!*.md
 
 # remove non-anonymized files
 Pfander*
