@@ -4,12 +4,14 @@
 
 (ref:discernment-countries) Discernment estimates by country. 
 
-```{r discernment-countries, fig.cap="(ref:discernment-countries)", fig.height= 6.9}
+```{r discernment-countries, fig.cap="(ref:discernment-countries)", fig.height= 8}
 bars <- ggplot(accuracy_effect %>% 
          group_by(country_mapcompatible) %>% 
          summarise(yi = mean(yi), 
                    n_effect = n_distinct(observation_id)) %>% 
-         mutate(country = fct_reorder(country_mapcompatible, desc(yi))), 
+         mutate(country = fct_reorder(country_mapcompatible, desc(yi)), 
+                # for plotting labels later
+                h_adjust = ifelse(yi < 0, -0.1, 0.1)), 
        aes(x = country, y = yi, color = country)) +
   geom_pointrange(aes(ymin = 0, ymax = yi), size = 0.2) +
   scale_color_viridis_d(option = "rocket", begin = 0.65, end = 1) +
@@ -18,9 +20,10 @@ bars <- ggplot(accuracy_effect %>%
   labs(x = NULL, y = "Average discernment estimate (Cohen's d)") +
   scale_y_continuous(limits = c(0, 2.5)) +
   coord_flip() +
-  # add labels for effects
-  geom_text(aes(label = paste0("n= ", n_effect)), hjust = -0.5, color = "black") +  # Add geom_text for n_effect labels
-  plot_theme
+ # add labels for effects
+  geom_text(aes(y = yi + h_adjust, label = paste0("n= ", n_effect)),  color = "black", size = 2) +  # Add geom_text for n_effect labels
+  plot_theme +
+  theme(axis.text = element_text(size = 8)) 
 
 map <- plot_map(fill = "discernment")
 
@@ -29,7 +32,7 @@ ggarrange(bars, map, ncol = 1)
 
 (ref:bias-countries) Skepticism bias estimates by country. 
 
-```{r bias-countries, fig.cap="(ref:bias-countries)", fig.height= 6.9}
+```{r bias-countries, fig.cap="(ref:bias-countries)", fig.height= 8}
 bars <- ggplot(error_effect %>% 
          group_by(country_mapcompatible) %>% 
          summarise(yi = mean(yi), 
@@ -46,8 +49,9 @@ bars <- ggplot(error_effect %>%
   labs(x = NULL, y = "Average skepticism bias estimate (Cohen's d)") +
   coord_flip() +
   # add labels for effects
-  geom_text(aes(y = yi + h_adjust, label = paste0("n= ", n_effect)),  color = "black") +  # Add geom_text for n_effect labels
-  plot_theme
+  geom_text(aes(y = yi + h_adjust, label = paste0("n= ", n_effect)),  color = "black", size = 2) +  # Add geom_text for n_effect labels
+  plot_theme +
+  theme(axis.text = element_text(size = 8)) 
 
 map <- plot_map(fill = "skepticism bias", data = error_effect)
 

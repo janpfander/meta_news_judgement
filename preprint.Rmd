@@ -1,0 +1,1070 @@
+---
+title             : "Spotting False News and Doubting True News: A Meta-Analysis of News Judgments"
+shorttitle        : "A Meta-Analysis of News Judgments"
+
+header-includes:  | # to prevent floats from moving past certain points (for the appendix)
+  \usepackage{placeins} 
+  
+
+author: 
+  - name          : "Jan Pfänder"
+    affiliation   : "1"
+    role:         # Contributorship roles (e.g., CRediT, https://casrai.org/credit/)
+      - "Conceptualization"
+      - "Data collection"
+      - "Statistical Analyses"
+      - "Writing - Original Draft"
+      - "Writing - Review & Editing"
+  - name          : "Sacha Altay"
+    affiliation   : "2"
+    corresponding : yes    # Define only one corresponding author
+    email         : "sacha.altay@gmail.com"
+    role:
+      - "Conceptualization"
+      - "Data collection"
+      - "Writing - Original Draft"
+      - "Writing - Review & Editing"
+      - "Supervision"
+
+affiliation:
+  - id            : "1"
+    institution   : "Institut Jean Nicod, Département d’études cognitives, ENS, EHESS, PSL University, CNRS, France"
+  - id            : "2"
+    institution   : "Department of Political Science, University of Zurich, Switzerland"
+
+authornote: |
+  We thank Aurélien Allard, Hugo Mercier, Gordon Pennycook, Ariana Modirrousta-Galian and Ben Tappin for their feedback on earlier versions of the manuscript.
+
+  JP received funding from the SCALUP ANR grant ANR-21-CE28-0016-01
+
+  SA received funding from the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation program (grant agreement nr. 883121).
+
+abstract: |
+  
+  How good are people at judging the veracity of news? We conducted a systematic literature review and pre-registered meta-analysis of 303 effect sizes from 67 experimental articles evaluating accuracy ratings of true and fact-checked false news ($N_{participants}$ = 193'282 from 40 countries across 7 continents). We found that people rated true news as more accurate than false news (Cohen’s d = 1.12, [1.01, 1.22]) and were better at rating false news as false than at rating true news as true (Cohen’s d = 0.31, [0.24, 0.39]). In other words, participants were able to discern true from false news, and erred on the side of skepticism rather than credulity. The political concordance of the news had no effect on discernment, but participants were more skeptical of politically discordant news. These findings lend support to crowdsourced fact-checking initiatives, and suggest that, to improve discernment, there is more room to increase the acceptance of true news than to reduce the acceptance of fact-checked false news.
+
+  
+keywords          : "Misinformation; fake news; false news; news judgment; news accuracy; news discernment"
+
+bibliography      : bibliography.bib
+csl               : nature.csl
+
+floatsintext      : yes
+linenumbers       : no 
+draft             : no
+mask              : no
+
+figurelist        : no
+tablelist         : no
+footnotelist      : no
+
+classoption       : "doc"
+output            : papaja::apa6_pdf # "_doc" for word; however, note that some of the features of kableExtra are not available for word and will yield errors. For example to knit to word, you'll have to comment out all "add_header_above()" functions for model output tables
+
+always_allow_html: true
+
+appendix:
+  - "appendix_a.Rmd"
+  - "appendix_b.Rmd"
+  - "appendix_c.Rmd"
+  - "appendix_d.Rmd"
+  - "appendix_e.Rmd"
+  - "appendix_f.Rmd"
+  - "appendix_g.Rmd"
+  - "appendix_h.Rmd"
+  - "appendix_i.Rmd"
+  - "appendix_j.Rmd"
+---
+
+```{r setup, include=FALSE}
+# Figure out output format
+is_docx <- knitr::pandoc_to("docx") | knitr::pandoc_to("odt")
+is_latex <- knitr::pandoc_to("latex")
+is_html <- knitr::pandoc_to("html")
+
+# Word-specific things
+table_format <- ifelse(is_docx, "huxtable", "kableExtra")  # Huxtable tables
+conditional_dpi <- ifelse(is_docx, 300, 300)  # Higher DPI
+conditional_align <- ifelse(is_docx, "default", "center")  # Word doesn't support align
+
+# Knitr options
+knitr::opts_chunk$set(
+  echo = FALSE, warning = FALSE, message = FALSE,
+  # tidy.opts = list(width.cutoff = 120),  # Code width
+  # fig.retina = 3, dpi = conditional_dpi,
+  # fig.width = 7, fig.asp = 0.618,
+  # fig.align = conditional_align, out.width = "100%",
+  fig.path = "output/figures/",
+  cache.path = "output/_cache/",
+  fig.process = function(x) {  # Remove "-1" from figure names
+    x2 = sub('-\\d+([.][a-z]+)$', '\\1', x)
+    if (file.rename(x, x2)) x2 else x
+  },
+  options(scipen = 99999999)  # Prevent scientific notation
+)
+
+# R options
+options(
+  width = 90,  # Output width
+  dplyr.summarise.inform = FALSE,  # Turn off dplyr's summarize() auto messages
+  knitr.kable.NA = "",  # Make NAs blank in kables
+  kableExtra.latex.load_packages = FALSE,  # Don't add LaTeX preamble stuff
+  modelsummary_factory_default = table_format,  # Set modelsummary backend
+  modelsummary_format_numeric_latex = "plain"  # Don't use siunitx
+)
+```
+
+```{r packages, include=FALSE}
+# load required packages
+library("papaja")      # For APA style manuscript   
+library("lme4")        # model specification / estimation
+library("lmerTest")    # provides p-values in the output
+library("tidyverse")   # data wrangling and visualisation
+library("afex")        # anova and deriving p-values from lmer
+library("broom")       # extracting data from model fits 
+library("broom.mixed") # extracting data from mixed models
+library("metafor")     # doing mata analysis
+library("metaviz")     # vizualization of meta analysis
+library("stringr")     # for dmetar p-curve function to work
+library("poibin")      # for dmetar p-curve function to work
+library("patchwork")   # put several plots together
+library("ggridges")    # for plots
+library("gghalves")    # for plots
+library("ggbeeswarm")  # Special distribution-shaped point jittering
+library("knitr")       # for tables
+library("kableExtra")  # also for tables
+library("sf")          # for maps
+library("ggpubr")      # for combining plots with ggarrange() 
+library("viridis")     # for generating color palette for map 
+
+
+# load required functions from dmetar package
+source("functions/variance_composition_function.R") # calculates variance composition for metafor output
+source("functions/p_curve_dmetar_function.R")       # generates p_curve and according estimates
+
+# load own functions
+source("functions/own_functions.R")
+
+# load plot theme
+source("functions/plot_theme.R") 
+```
+
+```{r read-data}
+# load data
+meta_wide <- read_csv("./data/cleaned.csv") %>% 
+  # control conditions only
+  filter(condition == "control")
+```
+
+```{r compute-correlation, echo=FALSE, message=FALSE}
+# get average correlation for samples from the raw data subset
+average_correlation <- read_csv("data/correlations_by_sample.csv") %>% 
+  summarise(mean_r = mean(r, na.rm = TRUE)) %>% pull(mean_r)
+
+# add a column to the data frame that identifies the correlation
+meta_wide <- meta_wide %>% 
+  mutate(cor = average_correlation)
+```
+
+```{r calculate-effects}
+# calculate main effect sizes (Cohen's d, following Cochrane) 
+accuracy_effect <- calculate_effect_sizes(effect = "accuracy", measure = "Cochrane")
+error_effect <- calculate_effect_sizes(effect = "error", measure = "Cochrane")
+
+# calculate alternative effect sizes
+# SMCC (pre-registered)
+SMCC_accuracy_effect <- calculate_effect_sizes(effect = "accuracy", measure = "SMCC")
+SMCC_error_effect <- calculate_effect_sizes(effect = "error", measure = "SMCC")
+# SMCR
+SMCR_accuracy_effect <- calculate_effect_sizes(effect = "accuracy", measure = "SMCR")
+SMCR_error_effect <- calculate_effect_sizes(effect = "error", measure = "SMCR")
+# SMD
+SMD_accuracy_effect <- calculate_effect_sizes(effect = "accuracy", measure = "SMD")
+SMD_error_effect <- calculate_effect_sizes(effect = "error", measure = "SMD")
+```
+
+```{r models}
+# Main models
+
+# Models using Cohen's d
+robust_model_accuracy <- calculate_models(data=accuracy_effect, robust = TRUE)
+robust_model_error <- calculate_models(data=error_effect, robust = TRUE)
+
+# store results in list
+list_model_accuracy <- tidy(robust_model_accuracy, conf.int = TRUE) %>% 
+  # report p.value according to apa standards
+  mutate(p.value = case_when(p.value < 0.001 ~ "< .001",
+                             TRUE ~ paste0("= ", sprintf("%.3f", p.value))
+                             )
+         ) %>% 
+  round_numbers() %>% 
+  mutate(ci = glue::glue("[{conf.low}, {conf.high}]")) %>%
+  split(.$term)
+list_model_error <- tidy(robust_model_error, conf.int = TRUE) %>% 
+  # report p.value according to apa standards
+  mutate(p.value = case_when(p.value < 0.001 ~ "< .001",
+                             TRUE ~ paste0("= ", sprintf("%.3f", p.value))
+  )
+  ) %>% 
+  round_numbers() %>% 
+  mutate(ci = glue::glue("[{conf.low}, {conf.high}]")) %>%
+  split(.$term)
+
+# calculate prediction intervals
+predict_model_accuracy <- predict(robust_model_accuracy)
+predict_model_error <- predict(robust_model_error)
+
+# Models using alternative effect sizes (for comparison)
+
+# SMCC (pre-registered analysis, using change score standardization)
+SMCC_model_accuracy <- calculate_models(data=SMCC_accuracy_effect, robust = TRUE)
+SMCC_model_error <- calculate_models(data=SMCC_error_effect, robust = TRUE)
+
+# SMCR (standardized mean change using raw score standardization)
+SMCR_model_accuracy <- calculate_models(data=SMCR_accuracy_effect, robust = TRUE)
+SMCR_model_error <- calculate_models(data=SMCR_error_effect, robust = TRUE)
+
+# SMD (standardized mean change assuming independence)
+SMD_model_accuracy <- calculate_models(data=SMD_accuracy_effect, robust = TRUE,
+                                          measure = "SMD")
+SMD_model_error <- calculate_models(data=SMD_error_effect, robust = TRUE, 
+                                    measure = "SMD")
+```
+
+```{r variance-composition}
+# variance composition
+
+# Main models
+variance_composition <- var.comp(robust_model_accuracy)
+variance_composition_accuracy <- variance_composition$results %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  mutate(outcome = "accuracy")
+
+variance_composition <- var.comp(robust_model_error)
+variance_composition_error <- variance_composition$results %>% 
+    mutate_if(is.numeric, round, 2) %>% 
+  mutate(outcome = "error")
+
+I2 <- rbind(variance_composition_accuracy, variance_composition_error) %>% 
+  rename(share_variance = `% of total variance`) %>% 
+  mutate(share_variance = paste0(share_variance, "%")) %>% 
+  split(.$outcome)
+
+# removing studies distinguishing between concordance
+error_without_concordance <- calculate_models(data=error_effect %>% 
+                                                filter(is.na(political_concordance)), 
+                                              robust = TRUE)
+
+variance_composition <- var.comp(error_without_concordance)
+variance_error_without_concordance <- variance_composition$results %>% 
+    mutate_if(is.numeric, round, 2) %>% 
+  rename(share_variance = `% of total variance`) %>% 
+  mutate(share_variance = paste0(share_variance, "%"), 
+         outcome = "error")
+```
+
+```{r calculate-moderators}
+# Moderator Models
+
+# calculate models
+moderator_models_accuracy <- calculate_moderator_models(data = accuracy_effect)
+moderator_models_error <- calculate_moderator_models(data = error_effect)
+
+# make more convenient lists of model output for reporting
+list_moderators_accuracy <- calculate_moderator_models(data = accuracy_effect, list_report = TRUE)
+list_moderators_error <- calculate_moderator_models(data = error_effect, list_report = TRUE)
+```
+
+```{r descriptives}
+# make objects for descriptive reporting and put them in a list
+descriptives <- list(
+  
+  papers = meta_wide %>% summarize(n_distinct(paperID)) %>% pull(), 
+  
+  samples = meta_wide %>% summarize(n_distinct(unique_sample_id)) %>% pull(),
+  
+  participants = meta_wide %>% 
+    group_by(unique_sample_id) %>% 
+    summarise(participants_per_sample = max(n_subj)) %>% 
+    summarize(sum(participants_per_sample)) %>% 
+    pull() %>% 
+    # uneven numbers may occur where we didn't have information on how many 
+    # participants in treatment vs. control group and assumed an even split 
+    # (i.e. dividing overal n by number of condition)
+    round(digits = 0), 
+  
+  participants_per_country = meta_wide %>% 
+    group_by(unique_sample_id, country_grouped) %>% 
+    summarise(participants_per_sample = max(n_subj)) %>% 
+    group_by(country_grouped) %>% 
+    summarize(n_subj = sum(participants_per_sample)) %>%
+    # uneven numbers may occur where we didn't have information on how many 
+    # participants in treatment vs. control group and assumed an even split 
+    # (i.e. dividing overal n by number of condition)
+    mutate_if(is.numeric, round, digits = 0) %>% 
+    mutate(share = round(n_subj / sum(n_subj), digits=2), 
+           share = paste0(share*100, "%")) %>% 
+    split(.$country_grouped),
+  
+    participants_per_continent = meta_wide %>% 
+    group_by(unique_sample_id, continent) %>% 
+    summarise(participants_per_sample = max(n_subj)) %>% 
+    group_by(continent) %>% 
+    summarize(n_subj = sum(participants_per_sample)) %>%
+    # uneven numbers may occur where we didn't have information on how many 
+    # participants in treatment vs. control group and assumed an even split 
+    # (i.e. dividing overal n by number of condition)
+    mutate_if(is.numeric, round, digits = 0) %>% 
+    mutate(share = round(n_subj / sum(n_subj), digits=2), 
+           share = paste0(share*100, "%")) %>% 
+    split(.$continent),
+  
+  observations = meta_wide %>% summarize(sum(as.integer(n_observations))) %>% pull(),
+  
+  effects = nrow(meta_wide),
+  
+  news = meta_wide %>% 
+    # choosing most conservative way of estimating by limiting to original news 
+    # headlines only (not recycled and not partly recycled)
+    filter(recycled_news == "original") %>% 
+    pivot_longer(c(n_news, n_news_pool), 
+                 names_to = "pool", 
+                 values_to = "n") %>% 
+    group_by(unique_news_id) %>% 
+    summarise(n = max(n, na.rm = TRUE)) %>% 
+    summarise(sum(n)) %>% 
+    pull(), 
+  
+  news_per_participant = meta_wide %>% 
+    group_by(unique_news_id, unique_sample_id) %>% 
+    summarise(n_per_sample_participant = max(n_news, na.rm = TRUE)) %>% 
+    group_by(unique_sample_id) %>% 
+    summarise(n = sum(n_per_sample_participant)) %>% 
+    summarize(mean = mean(n),
+              median = median(n),
+              max = max(n),
+              min = min(n)) %>% 
+    round(digits = 2),
+  
+  news_pool_n = meta_wide %>% 
+    mutate(pool = ifelse(!is.na(n_news_pool), "yes", "no")) %>% 
+    group_by(pool) %>% 
+    summarize(n_samples = n_distinct(unique_sample_id), 
+              n_effects = n_distinct(observation_id)
+    ) %>% 
+    split(.$pool),
+  
+  news_pool_distribution = meta_wide %>% 
+    group_by(unique_sample_id) %>% 
+    summarize(n_pool = max(n_news_pool)) %>% 
+    drop_na(n_pool) %>% 
+    summarize(max = max(n_pool), 
+              min = min(n_pool),
+              mean = mean(n_pool)) %>% 
+    round(digits = 2),
+  
+  countries = meta_wide %>% reframe(unique(country)) %>% nrow(), 
+  
+  continents = meta_wide %>% reframe(unique(continent)) %>% nrow(),
+  
+  discernment = accuracy_effect %>% 
+    mutate(direction = ifelse(yi <= 0, "below/equal0", "above0")) %>% 
+    group_by(direction) %>% 
+    summarize(n_effect = n_distinct(observation_id)) %>% split(.$direction),
+  
+  error = error_effect %>% 
+    mutate(direction = ifelse(yi <= 0, "below/equal0", "above0")) %>% 
+    group_by(direction) %>% 
+    summarize(n_effect = n_distinct(observation_id)) %>% split(.$direction), 
+  
+  design = meta_wide %>% group_by(design) %>% 
+    summarise(n = n_distinct(observation_id)) %>% split(.$design),
+  
+  concordance = meta_wide %>% filter(news_family == "politically_concordant") %>% 
+    summarise(n_sample = n_distinct(unique_sample_id), 
+              n_paper = n_distinct(paperID), 
+              n_effect = n_distinct(observation_id)
+    ) %>% pivot_longer(everything()) %>% split(.$name), 
+  
+  online = meta_wide %>% 
+    group_by(online) %>% 
+    summarize(n = n_distinct(observation_id)) %>% split(.$online), 
+  
+  peer_review = meta_wide %>% group_by(peer_reviewed) %>% 
+    summarize(n_papers = n_distinct(paperID)) %>% split(.$peer_reviewed), 
+  
+  data_descriptive_plot = plot_descriptive(return = "data") %>% split(.$veracity),
+  
+  format = meta_wide %>% group_by(news_format_grouped) %>% summarise(across(c(paperID, unique_sample_id, observation_id), 
+                                                                            ~ n_distinct(.x), .names = "n_{.col}"
+  )
+  ) %>% split(.$news_format_grouped),
+  
+  source = meta_wide %>% group_by(news_source) %>% 
+    mutate(news_source = ifelse(news_source == TRUE, "source", "no_source")) %>% 
+    summarise(across(c(paperID, unique_sample_id, observation_id), 
+                     ~ n_distinct(.x), .names = "n_{.col}")
+    ) %>% split(.$news_source),
+  
+  country = meta_wide %>% group_by(country_grouped) %>% 
+    summarise(across(c(paperID, unique_sample_id, observation_id), 
+                     ~ n_distinct(.x), .names = "n_{.col}"
+    )
+    ) %>% split(.$country_grouped), 
+  
+  n_subj_by_sample = meta_wide %>% group_by(unique_sample_id) %>% 
+    summarise(n_subj = max(n_subj)) %>% 
+    summarize(max = max(n_subj), 
+              min = min(n_subj),
+              mean = mean(n_subj), 
+              median = median(n_subj)) %>% 
+    mutate_if(is.numeric, round, digits = 2), 
+  
+  perfect_symmetry = meta_wide %>% 
+    mutate(perfect_symetry = ifelse(perfect_symetry == TRUE, "perfect",
+                                    "not_perfect"), 
+           perfect_symetry = ifelse(is.na(perfect_symetry), "not_enough_info", perfect_symetry)
+           ) %>% 
+    group_by(perfect_symetry) %>% summarize(n = n_distinct(observation_id)) %>% 
+    ungroup() %>% mutate(share = round(n / sum(n), digits=2),
+                         share = paste0(share*100, "%")) %>% 
+    split(.$perfect_symetry), 
+  
+  significant_discernment = accuracy_effect %>% 
+    mutate(conf_low = yi - 1.96*sqrt(vi), 
+           conf_high = yi + 1.96*sqrt(vi),
+           significant = ifelse((conf_low < 0 & conf_high < 0) |
+                                  (conf_low > 0 & conf_high > 0), 
+                                "significant", 
+                                "not_significant"
+           ), 
+           direction = ifelse(yi > 0, "positive", "negative")
+    ) %>% 
+    group_by(significant, direction) %>% 
+    summarise(n = n_distinct(observation_id)) %>% 
+    super_split(direction, significant),
+  
+  significant_bias = error_effect %>% 
+    mutate(conf_low = yi - 1.96*sqrt(vi), 
+           conf_high = yi + 1.96*sqrt(vi),
+           significant = ifelse((conf_low < 0 & conf_high < 0) |
+                                  (conf_low > 0 & conf_high > 0), 
+                                "significant", 
+                                "not_significant"
+           ), 
+           direction = ifelse(yi > 0, "positive", "negative")
+    ) %>% 
+    group_by(significant, direction) %>% 
+    summarise(n = n_distinct(observation_id)) %>% 
+    super_split(direction, significant), 
+  
+  topic = meta_wide %>% 
+    group_by(news_family_grouped) %>% 
+    summarize(n_papers = n_distinct(paperID)) %>% 
+    split(.$news_family_grouped), 
+  
+  automated_samples = meta_wide %>% 
+    filter(selection_fake_news == "automated") %>% 
+    group_by(paperID, ref, unique_sample_id) %>% 
+    summarise(participants_per_sample = max(n_subj), 
+              effect_sizes = n()) %>% 
+    summarize(n_participants = sum(participants_per_sample), 
+              n_effect_sizes = sum(effect_sizes)) %>% 
+    split(.$ref)
+)
+
+# to check the publication years
+# meta_wide %>% 
+#   mutate(year = str_extract(ref, "\\d+"), 
+#          year = as.numeric(year), 
+#          covid_times = ifelse(year %in% c(2020, 2021, 2022), TRUE, FALSE)) %>% 
+#   group_by(year, covid_times) %>% 
+#   summarize(n_papers = n_distinct(paperID))
+
+# check which studies were automated
+# meta_wide %>% 
+#     filter(selection_fake_news == "automated") %>% 
+#   group_by(selection_fake_news) %>% 
+#   summarize(ref = unique(ref))
+
+
+# check which studies ran pre-prints in which they measured accuracy
+# table <- meta_wide %>%
+#     filter(pre_test == "yes") %>%
+#   summarize(ref = unique(ref), 
+#             reference = unique(reference)) 
+# 
+# kable(table, format = "pipe", col.names = c("ref", "reference"))
+```
+
+```{r lit-review, include=FALSE, message=FALSE}
+# Literature review
+
+# load prisma data
+prisma <- read_csv("literature_search/prisma.csv")
+
+# turn data frame into list to be able to call easily using inline coding
+prisma <- as.list(prisma %>% pivot_wider(names_from = category, values_from = n))
+```
+
+```{r abstract}
+# Use this for generating the abstract; once knitted, copy-paste it above in the "abstract" section of the yaml header; then remove and knit again
+
+# How good are people at judging the veracity of news? We conducted a systematic literature review and pre-registered meta-analysis of `r descriptives$effects` effect sizes from `r descriptives$papers` experimental articles evaluating accuracy ratings of true and fact-checked false news ($N_{participants}$ = `r descriptives$participants` from `r descriptives$countries` countries across `r descriptives$continents` continents). We found that people rated true news as more accurate than false news (Cohen's d = `r list_model_accuracy$overall$estimate`, `r list_model_accuracy$overall$ci`) and were better at rating false news as false than at rating true news as true (Cohen's d = `r list_model_error$overall$estimate`, `r list_model_error$overall$ci`). In other words, participants were able to discern true from false news, and erred on the side of skepticism rather than credulity. The political concordance of the news had no effect on discernment, but participants were more skeptical of politically discordant news. These findings lend support to crowdsourced fact-checking initiatives, and suggest that, to improve discernment, there is more room to increase the acceptance of true news than to reduce the acceptance of fact-checked false news.
+```
+
+\clearpage
+
+# Introduction
+
+Many have expressed concerns that we live in a "post-truth" era and that people cannot tell the truth from falsehoods anymore. In parallel, populist leaders around the world have tried to erode trust in the news by delegitimizing journalists and the news media more broadly. Since the 2016 US presidential election, over 4000 scientific articles have been published on the topic of false news. Across the world, numerous experiments evaluating the effect of interventions against misinformation or susceptibility to misinformation have relied on a similar design feature: having participants rate the accuracy of true and fact-checked false headlines--typically in a Facebook-like format, with an image, title, lede, and source, or as an isolated title/claim. Taken together, these studies allow us to shed some light on the most common fears voiced about false news, namely that people may fall for false news, distrust true news, or may be unable to discern between true and false news. In particular, we investigated whether people rate true news as more accurate than fact-checked false news (discernment) and whether they were better at rating false news as inaccurate than at rating true news as accurate (skepticism bias). We also investigated various moderators of discernment and skepticism bias such as political congruence, the topic of the news, or the presence of a source.
+
+Establishing whether people can spot false news is important to design interventions against misinformation: if people lack the skills to spot false news, interventions should be targeted at improving skills to detect false news, whereas if people have the ability to spot false news but nonetheless engage with it, the problem lies elsewhere and may be one of motivation or (in)attention that educational interventions may struggle to address.
+
+Past work has reliably shown that people do not fare better than chance at detecting lies because most verbal and non-verbal cues people use to detect lies are unreliable [@brennenLieDetectionWhat2023]. Why would this be any different for detecting false news? People make snap judgments to evaluate the quality of the news they come across [@montalverneTrustGapHow2022], and rely on seemingly imperfect proxies such as the source of information, police and fonts, the presence of hyperlinks, the quality of visuals, ads, or the tone of the text [@metzgerMakingSenseCredibility2007; @rossarguedasSnapJudgementsHow2022]. In experimental settings, participants report relying on intuitions and tacit knowledge to judge the accuracy of news headlines [@altayExposureHigherRates2023]. Yet, a scoping review of the literature on belief in false news (including a total of 26 articles) has shown that, in experiments, participants "can detect deceitful messages reasonably well" [@bryanovDeterminantsIndividualsBelief2021, p. 19]. Similarly, a survey on 150 misinformation experts has shown that 53% of experts agree that "people can tell the truth from falsehoods" -- while only 25% of experts disagreed with the statement [@altayExposureHigherRates2023]. Unlike the unreliable proxies people rely on to detect lies in interpersonal contexts, there are reasons to believe that some of the cues people use to detect false news may, on average, be reliable. For instance, the news outlets people trust the least do publish lower quality news and more false news, as people's trust ratings of news outlets correlate strongly with fact-checkers ratings in the US and Europe [@pennycookLazyNotBiased2019; @schulzAreNewsOutlets2020]. Moreover, false news has some distinctive properties, such as being more politically slanted [@mouraoFakeNewsDiscursive2019], being more novel, surprising, or disgusting, being more sensationalist, funnier, less boring, and less negative [@vosoughiSpreadTrueFalse2018a; @chenWhatMakesNews2023], or being more interesting-if-true [@altayIfThisAccount2022]. These features aim at increasing engagement, but they do so at the expense of accuracy, and in many cases, people may pick up on it. This led us to pre-register the hypothesis that people would rate true news as more accurate than false news. Yet, legitimate concerns have been raised about the lack of data outside of the US, especially in some Global South countries where the misinformation problem is arguably worse. Our meta-analysis covers `r descriptives$countries` countries across `r descriptives$continents` continents and directly addresses concerns about the over-representation of US-data.
+
+**H1: People rate true news as more accurate than false news.**
+
+While many fear that people are exposed to too much misinformation, too easily fall for it, and are overly influenced by it, a growing body of researchers is worried that people are exposed to too little reliable information, commonly reject it, and are excessively resistant to it [@acerbiResearchNoteFighting2022; @mercierNotBornYesterday2020]. Establishing whether true news skepticism (excessively rejecting true news) is of similar magnitude to false news gullibility (excessively accepting false news) is important for future studies on misinformation: if people are excessively gullible, interventions should primarily aim at fostering skepticism, whereas if people are excessively skeptical, interventions should focus on increasing trust in reliable information. For these reasons, in addition to investigating discernment (H1), we also looked at skepticism bias by comparing the magnitude of true news skepticism to false news gullibility. Research in psychology has shown that people exhibit a "truth bias" [@brashierJudgingTruth2020; @streetSourceTruthBias2015], such that they tend to accept incoming statements rather than reject them. Similarly, work on interpersonal communication has shown that, by default, people tend to accept communicated information [@levineTruthDefaultTheoryTDT2014]. However, there are reasons to think that the truth-default-theory may not apply to news judgments. It has been hypothesized that people display a truth bias in interpersonal contexts because information in these contexts is, in fact, often true [@brashierJudgingTruth2020]. When it comes to news judgments, it is not clear that people by default expect news stories to be true. Trust in the news and journalists is low worldwide [@newmanReutersInstituteDigital2022], and a significant part of the population holds cynical views of the news [@mihailidisCostDisbeliefFracturing2021]. Similarly, populist leaders across the world have attacked the credibility of the news media and instrumentalized the concept of fake news to discredit quality journalism [@egelhoferFakeNewsTwodimensional2019; @vanduynPrimingFakeNews2019]. Disinformation strategies such as "flooding the zone" with false information [@paulRussianFirehoseFalsehood2016; @ulusoyFloodingZoneHow2021] have been shown to increase skepticism in news judgments [@altayExposureHigherRates2023]. Moreover, in many studies included in our meta-analysis, the news stories were presented in a social media format (most often Facebook), which could fuel skepticism in news judgments. Indeed, people trust news [@montalverneTrustGapHow2022] and information more generally [@fletcherPeopleDontTrust2017] less on social media than on news websites. In line with these observations, some empirical evidence suggests that for news judgments, people display the opposite of a truth bias [@luoCredibilityPerceptionsDetection2022], namely a conservative skepticism bias, whereby people tend to rate all news as more false than they are [@altayExposureHigherRates2023; @bataillerSignalDetectionApproach2022; @modirrousta-galianGamifiedInoculationInterventions2023]. We thus predicted that when judging the accuracy of news, participants will err on the side of skepticism more than on the side of gullibility. Precisely, we predicted that people will be better at rating false news as false than rating true news as true.
+
+**H2: People are better at rating false news as false than true news as true.**
+
+Finally, we investigated potential moderators of H1 and H2, such as the country where the experiment was conducted, the format of the news headlines, the topic, whether the source of the news was displayed, and political concordance of the news. Past work has suggested that displaying the source of the news has a small effect at best on accuracy ratings [@diasEmphasizingPublishersDoes2020], whereas little work has investigated differences in news judgments across countries, topics, and formats. The effect of political concordance on news judgments is debated. Participants may be motivated to believe politically congruent (true and false) news, motivated to disbelieve politically incongruent news, or not be politically motivated at all but still display such biases [@tappinBayesianBiasedAnalytic2020]. We formulated research questions instead of hypotheses for our moderator analyses because of a lack of strong theoretical expectations.
+
+## The present study
+
+We conducted a systematic literature review and pre-registered meta-analysis based on `r prisma$studies_included` publications, providing data on `r descriptives$samples` samples (`r descriptives$participants` participants) and `r descriptives$effects` effects (i.e. **k**, the meta-analytic observations)[^1]. For a publication to be included in our meta-analysis, we set six eligibility criteria: (1) We considered as relevant all document types with original data (not only published ones, but also reports, pre-prints and working papers). When different publications were using the same data, a scenario we encountered several times, we included only one publication (which we picked arbitrarily). (2) We only included articles that measured perceived accuracy (including "accuracy", "credibility", "trustworthiness", "reliability" or "manipulativeness"), and (3) did so for both true and false news. (4) We only included studies relying on real-world news items. Accordingly, we excluded studies in which researchers made up the false news items, or manipulated the properties of the true news items. (5) We could only include articles that provided us with the relevant summary statistics (means and standard deviations for both false and true news), or publicly available data that allowed us to calculate those. In cases where we were not able to retrieve the relevant summary statistics either way, we contacted the authors. (6) Finally, to ensure comparability, we only included studies that provided a neutral control condition[^2]. After starting the literature search, we added further search criteria in order to diminish the vast number of results (see [methods](#methods)). Rejection decisions for all retrieved papers are documented and can be accessed on the [OSF project page](https://osf.io/96zbp/?view_only=d2f3147f652e44e2a0414d7d6d9a6c29). We provide a list of all included articles in Appendix \@ref(included-studies).
+
+[^1]: Sometimes, a sample provided several effect sizes, for example when separate accuracy ratings are available by news topic, or when follow-up studies were conducted on the same participants. A common case where a sample provides several effect sizes is when participants rated both politically concordant and discordant news. In this case, if possible, we entered summary statistics separately for the concordant and discordant items, yielding two effect sizes (i.e. two different rows in our data frame). We account for the resulting hierarchical structure of the data in our statistical models.
+
+[^2]: For example, @calvilloInitialAccuracyFocus2020, among other things, test the effect of an interest prime vs. an accuracy prime. A neutral control condition - one that is comparable to those of other studies - would have been no prime at all. We therefore excluded the paper.
+
+We found that, on average, people are good at discerning true from fact-checked false news, and rate true news as much more accurate than false news. However, they are slightly better at rating fact-checked false news as inaccurate than at rating true news as accurate.
+
+# Results
+
+## Descriptives
+
+Our meta-analysis includes publications from `r descriptives$countries` countries across `r descriptives$continents` continents. However, `r descriptives$participants_per_country$US$share` of all participants were recruited in the United States alone, and `r descriptives$participants_per_continent$Europe$share` in Europe. Only `r descriptives$participants_per_continent$Asia$share` of participants were recruited in Asia, and even less in Africa (`r descriptives$participants_per_continent$Africa$share`; see Fig. \@ref(fig:map) for the number of effect sizes per country). The average sample size was `r descriptives$n_subj_by_sample$mean` (min = `r descriptives$n_subj_by_sample$min`, max = `r descriptives$n_subj_by_sample$max`, median = `r descriptives$n_subj_by_sample$median`).
+
+```{r}
+#[^]: In rare cases we did not find information on exactly how many participants were in each experimental condition. In such cases, we took the overall reported sample size and assumed an even split across conditions (i.e. dividing the overall N by the number of conditions).
+```
+
+In total, participants rated the accuracy of `r descriptives$news` unique news items. On average, a participant rated `r descriptives$news_per_participant$mean` news items per study (min = `r descriptives$news_per_participant$min`, max = `r descriptives$news_per_participant$max`, median = `r descriptives$news_per_participant$median`). For `r descriptives$news_pool_n$yes$n_samples` samples, news items were sampled from a pool of news (the pool size ranged from `r descriptives$news_pool_distribution$min` to `r descriptives$news_pool_distribution$max`, with an average pool size of `r descriptives$news_pool_distribution$mean` items). The vast majority of studies (`r descriptives$design$within$n` out of `r descriptives$effects` effects) used a within participant design for manipulating news veracity, with each participant rating both true and false news items. Almost all effect sizes are from online studies (`r descriptives$online$yes$n` out of `r descriptives$online$yes$n + descriptives$online$no$n`).
+
+(ref:map) A map of the number of effect sizes per country.
+
+```{r map, fig.cap="(ref:map)"}
+plot_map(fill = "effects")
+```
+
+## Analytic procedures
+
+All analyses were pre-registered and the choice of models was informed by simulations we conducted before having the data. To test H1, we calculated a discernment score by subtracting the mean accuracy ratings of false news from the mean accuracy ratings of true news, such that higher scores indicate better discernment. This differential measure of discernment is common in the literature on misinformation [@guayHowThinkWhether2023]. To test H2, we first calculated a judgment error for true and false news respectively. Error is defined as the distance between optimal accuracy ratings and actual accuracy ratings. For false news, optimal ratings represent the bottom of the accuracy scale (see Fig. \@ref(fig:descriptive)). False news error is thus computed as the distance between the accuracy score and the bottom of the scale. For instance, for an average false news accuracy rating of 2.2 on a 4-point accuracy scale going from 1, not accurate at all, to 4, completely accurate, the error would be: 2.2 - 1 = 1.2. For true news, optimal ratings represent the top of the accuracy scale (see Fig. \@ref(fig:descriptive)). True news error is thus computed as the distance between the accuracy score and the top of the scale. For instance, for an average true news accuracy rating of 2.5 on a 4-point accuracy scale, the error would be: 4 - 2.5 = 1.5. We then calculate the skepticism bias as the difference between the two errors, subtracting the true news error score from the false news error score (e.g. skepticism bias: 1.5 - 1.2 = 0.3). Note that we cannot use more established measures of discernment or response bias, such as Signal Detection Theory, because we rely on mean ratings and not individual ratings. However, in Appendix \@ref(signal-detection-theory), we show that for the studies we have raw data on, our main findings hold when relying on d’ (sensitivity) and c (response bias) in Signal Detection Theory.
+
+Fig. \@ref(fig:descriptive) offers a descriptive (irrespective of sample sizes) overview of all accuracy ratings that we calculated our effect sizes from. On average, true news were rated as more accurate than false news, as shown by the positive discernment score (`r descriptives$data_descriptive_plot$true$discernment`). We also see that false news discrimination is better than true news discrimination, i.e., the distance between true news ratings and the top of the scale (`r descriptives$data_descriptive_plot$true$error_true`) is greater than the distance between false news ratings and bottom of the scale (`r descriptives$data_descriptive_plot$true$error_fake`), yielding a positive skepticism bias (`r descriptives$data_descriptive_plot$true$error_true` - `r descriptives$data_descriptive_plot$true$error_fake` = `r descriptives$data_descriptive_plot$true$error_true - descriptives$data_descriptive_plot$true$error_fake`).
+
+(ref:descriptive) Distribution of accuracy ratings for true and fact-checked false news, scaled to range from 0 to 1. The figure illustrates discernment (the distance between the mean for true news and the mean for false news) and the errors (distance to the right end for true news and to the left end for false news) from which the skepticism bias is computed. A larger error for true news compared to false news yields a positive skepticism bias. In this descriptive figure, unlike in the meta-analysis, ratings and effect sizes are not weighted by sample size.
+
+```{r descriptive, fig.cap="(ref:descriptive)"}
+plot_descriptive()
+```
+
+Skepticism bias can only be (meaningfully) computed on scales using symmetrical labels, i.e. the intensity of the labels to qualify true and false news are equivalent (e.g., “True” vs “False” or “Definitely fake” [1] to “Definitely real” [7]). `r descriptives$perfect_symmetry$perfect$share` of effects included in the meta-analysis used scales with perfectly symmetrical labels, while `r descriptives$perfect_symmetry$not_perfect$share` used imperfectly symmetrical scale labels, i.e., the intensity of the labels to qualify true and false news are similar but not equivalent (e.g., [1] not at all accurate, [2] not very accurate, [3] somewhat accurate, [4] very accurate; here for instance ‘not all accurate’ is stronger than ‘very accurate’)[^3]. In Appendix \@ref(moderators), we show that scale symmetry has no statistically significant effect on skepticism bias.
+
+[^3]: Note that we could only compute this variable for scales that explicitly labeled each scale point, resulting in missing values for `r descriptives$perfect_symmetry$not_enough_info$share` of effects.
+
+To be able to compare effect sizes across different scales, we calculated Cohen's d, a common standardized mean difference. To account for statistical dependence between true and false news ratings arising from the within-participant design used by most studies (`r descriptives$design$within$n` out of `r descriptives$effects` effect sizes), we calculated the standard error following the [Cochrane recommendations for crossover trials](https://training.cochrane.org/handbook/current/chapter-23#section-23-2-7-3) [@higgins_cochrane_2019]. For the remaining `r descriptives$design$between$n` effect sizes from studies that used a between-participant design, we calculated the standard error assuming independence between true and false news ratings (see [methods](#methods)). In Appendix \@ref(effect-sizes), we show that our results hold across alternative standardized effect measures, among which the one we had originally pre-registered, a standardized mean change using change score standardization (SMCC). We chose to deviate from the pre-registration and use Cohen's d instead, because it is easier to interpret and corresponds to the standards [for crossover trials recommended by the Cochrane manual](https://training.cochrane.org/handbook/current/chapter-23#section-23-2-7-3) [@higgins_cochrane_2019]. In Appendix \@ref(effect-sizes), we also provide effect estimates in units of the original scales separately for each scale.
+
+We used multilevel meta models with clustered standard errors at the sample level to account for cases in which the same sample contributed various effect sizes (i.e. the meta-analytic units of observation). All confidence intervals reported in this paper are 95% confidence intervals.
+
+## Main results
+
+### Discernment (H1)
+
+(ref:forest) Forest plots for discernment and skepticism bias. Effects are weighed by their sample size. Effect sizes are calculated as Cohen's d. Horizontal bars represent 95% confidence intervals. The average estimate is the result of a multilevel meta model with clustered standard errors at the sample level.
+
+```{r forest, echo=FALSE, fig.cap="(ref:forest)"}
+# Set up a 1x2 layout for the two plots
+par(mfrow = c(1, 2))
+### create plot for accuracy
+forest.rma(robust_model_accuracy,
+       xlim = c(-0.7, 4),        ### adjust horizontal plot region limits
+       at = c(-0.5, 0, 1, 2, 3, 4), 
+       order="obs",             ### order by size of yi
+       slab=NA, annotate=FALSE, ### remove study labels and annotations
+       efac=c(0, 1),            ### remove vertical bars at end of CIs
+       pch=19,                  ### changing point symbol to filled circle
+       col="gray40",            ### change color of points/CIs
+       psize=1,                 ### increase point size
+       cex.lab=0.8, cex.axis=0.8,   ### increase size of x-axis title/labels
+       lty=c("solid", "dotted", "blank"),  ### remove horizontal line at top of plot
+       mlab = "BLASt", 
+       ylim = c(-22, 310), 
+       addfit = FALSE, 
+       xlab = "Discernment") 
+addpoly(robust_model_accuracy, mlab=" ", cex = 0.6, row = -20) 
+abline(h=0)
+# Add the text to the right-hand side of the polygon
+text(x = list_model_accuracy$overall$estimate + 0.1, 
+     y = -20,
+     paste0(list_model_accuracy$overall$estimate," ",
+            list_model_accuracy$overall$ci),
+     pos = 4, cex = 0.7)
+
+# check limits to redefine the plot
+
+# x axis
+# accuracy_effect %>% summarize(min = min(yi),
+#                            max = max(yi))
+# y axis
+# nrow(meta_wide)
+
+### create plot for error
+forest.rma(robust_model_error,
+       xlim = c(-2, 2),        ### adjust horizontal plot region limits
+       at = c(-2, -1, 0, 1, 2), 
+       order="obs",             ### order by size of yi
+       slab=NA, annotate=FALSE, ### remove study labels and annotations
+       efac=c(0, 1),            ### remove vertical bars at end of CIs
+       pch=19,                  ### changing point symbol to filled circle
+       col="gray40",            ### change color of points/CIs
+       psize=1,                 ### increase point size
+       cex.lab=0.8, cex.axis=0.8,   ### increase size of x-axis title/labels
+       lty=c("solid", "dotted", "blank"),  ### remove horizontal line at top of plot
+       mlab = "BLASt", 
+       ylim = c(-22, 310), 
+       addfit = FALSE, 
+       xlab = "Skepticism bias")  
+addpoly(robust_model_error, mlab=" ", cex = 0.6, row = -20)  
+abline(h=0) 
+# Add the text to the right-hand side of the polygon
+text(x = list_model_error$overall$estimate + 0.1, 
+     y = -20,
+     paste0(list_model_error$overall$estimate," ",
+            list_model_error$overall$ci),
+     pos = 4, cex = 0.7)
+
+# # check limits
+# error_effect %>% summarize(min = min(yi),
+#                            max = max(yi))
+
+# Reset the layout to the default (1x1)
+par(mfrow = c(1, 1))
+```
+
+Supporting H1, participants rated true news as more accurate than false news on average. Pooled across all studies, the average discernment estimate is large (d = `r list_model_accuracy$overall$estimate` `r list_model_accuracy$overall$ci`, p `r list_model_accuracy$overall$p.value`). As shown in Fig. \@ref(fig:forest), `r descriptives$discernment$above0$n_effect` of `r descriptives$effects` estimates are positive. Of the positive estimates, `r descriptives$significant_discernment$positive$not_significant$n` have a confidence interval that includes 0, as does `r descriptives$significant_discernment$negative$not_significant$n` of the negative estimates. Most of the variance in the effect sizes observed above is explained by between-sample heterogeneity ($I2_{between}$ = `r I2$accuracy$share_variance[3]`). Within-sample heterogeneity is comparatively small ($I2_{within}$ = `r I2$accuracy$share_variance[2]`), indicating that when the same participants were observed on several occasions (i.e. the same sample contributed several effect sizes), on average, discernment performance was similar across those observations. The share of the variance attributed to sampling error is very small (`r I2$accuracy$share_variance[1]`), which is indicative of the large sample sizes and thus precise estimates.
+
+### Skepticism bias (H2)
+
+We found support for H2, with participants being better at rating false news as inaccurate than at rating true news as accurate (i.e. false news discrimination was on average higher than true news discrimination). However, the average skepticism bias estimate is small (d = `r list_model_error$overall$estimate` `r list_model_error$overall$ci`, p `r list_model_error$overall$p.value`). As shown in Fig \@ref(fig:forest), `r descriptives$error$above0$n_effect` of `r descriptives$effects` estimates are positive. Of the positive estimates, `r descriptives$significant_bias$positive$not_significant$n` have a confidence interval that includes 0, as do `r descriptives$significant_bias$negative$not_significant$n` of the negative estimates. By contrast with discernment, most of the variance in skepticism bias is explained by within-sample heterogeneity ($I2_{within}$ = `r I2$error$share_variance[2]`; $I2_{between}$ = `r I2$error$share_variance[3]`; sampling error = `r I2$error$share_variance[1]`). Whenever we observe within sample variation in our data, it is because several effects were available for the same sample. This is mostly the case for studies with multiple survey waves, or when effects were split by different news topics, suggesting that these factors may account for some of that variation. In the moderator analyses below, we compare across samples and broad categories, thereby glossing over much of that within variation for most variables.
+
+## Moderators
+
+Following the pre-registered analysis plan, we ran a separate meta regression for each moderator by adding the respective moderator variable as a fixed effect to the multilevel meta models. We report regression tables and visualizations in Appendix \@ref(moderators). Here, we report the regression coefficients as "Delta"s, since they designate differences between categories. For example, in the moderator analysis of political concordance on skepticism bias, "concordant" marks the baseline category. The predicted value for this category can be read from the intercept (-.2). The "Delta" is the predicted difference between concordant and discordant (.78). To obtain the predicted value for discordant news, one needs to add the "Delta" to the intercept (-.2 + .78 = .58). 
+
+#### Cross-cultural variability
+
+For samples based in the United States (`r descriptives$country$US$n_observation_id`/`r descriptives$effects` effect sizes), discernment was higher than for samples based in other countries, on average ($\Delta$ Discernment = `r list_moderators_accuracy$Country$country_groupedUS$estimate` `r list_moderators_accuracy$Country$country_groupedUS$ci`; baseline discernment other countries pooled = `r list_moderators_accuracy$Country$intercept$estimate` `r list_moderators_accuracy$Country$intercept$ci`). However, we did not find a statistically significant difference regarding skepticism bias. A visualization of discernment (\@ref(fig:discernment-countries)) and skepticism bias (\@ref(fig:bias-countries)) across countries can be found in Appendix \@ref(country-comparison).
+
+#### Scales
+
+The studies in our meta analysis used a variety of accuracy scales, including both binary (e.g. "Do you think the above headline is accurate? - Yes, No") and continuous ones (e.g. "To the best of your knowledge, how accurate is the claim in the above headline" 1 = Not at all accurate, 4 = Very accurate).
+
+Regarding discernment, two scale types differed from the most common 4-point scale (Baseline discernment 4-point-scale = `r list_moderators_accuracy$Scale$intercept$estimate` `r list_moderators_accuracy$Scale$intercept$ci`, p `r list_moderators_accuracy$Scale$intercept$p.value`): Both 6-point scales ($\Delta$ Discernment = `r list_moderators_accuracy$Scale$accuracy_scale_grouped6$estimate` `r list_moderators_accuracy$Scale$accuracy_scale_grouped6$ci`, p `r list_moderators_accuracy$Scale$accuracy_scale_grouped6$p.value`) and binary scales ($\Delta$ Discernment = `r list_moderators_accuracy$Scale$accuracy_scale_groupedbinary$estimate` `r list_moderators_accuracy$Scale$accuracy_scale_groupedbinary$ci`, p `r list_moderators_accuracy$Scale$accuracy_scale_groupedbinary$p.value`) yielded lower discernment. Regarding skepticism bias, studies using a 4-point scale (Baseline skepticism bias 4-point scale = `r list_moderators_error$Scale$intercept$estimate` `r list_moderators_error$Scale$intercept$ci`, p `r list_moderators_error$Scale$intercept$p.value`) reported a larger skepticism bias compared to studies using a binary and a 7-point scale ($\Delta$ skepticism bias = `r list_moderators_error$Scale$accuracy_scale_groupedbinary$estimate` `r list_moderators_error$Scale$accuracy_scale_groupedbinary$ci`, p `r list_moderators_error$Scale$accuracy_scale_groupedbinary$p.value` for binary scales; `r list_moderators_error$Scale$accuracy_scale_grouped7$estimate` `r list_moderators_error$Scale$accuracy_scale_grouped7$ci`, p `r list_moderators_error$Scale$accuracy_scale_grouped7$p.value` for 7-point scales). Interpreting the the observed differences is not straightforward. We attempt a more detailed discussion of differences between binary and Likert-scale studies in Appendix \@ref(binary).
+
+#### Format
+
+Studies using as stimuli headlines with pictures ($\Delta$ skepticism bias = `r list_moderators_error$Format$news_format_groupedheadline_picture$estimate` `r list_moderators_error$Format$news_format_groupedheadline_picture$ci`, p `r list_moderators_error$Format$news_format_groupedheadline_picture$p.value`; `r descriptives$format$headline_picture$n_observation_id` effects), or headlines with pictures and a lede ($\Delta$ skepticism bias = `r list_moderators_error$Format$news_format_groupedheadline_picture_lede$estimate` `r list_moderators_error$Format$news_format_groupedheadline_picture_lede$ci`, p `r list_moderators_error$Format$news_format_groupedheadline_picture_lede$p.value`; `r descriptives$format$headline_picture_lede$n_observation_id` effects), displayed a stronger skepticism bias compared to studies relying on headlines with no picture/lede (Baseline skepticism bias headlines only = `r list_moderators_error$Format$intercept$estimate` `r list_moderators_error$Format$intercept$ci`, p `r list_moderators_error$Format$intercept$p.value`; `r descriptives$format$headline$n_observation_id` effects). We do not find differences related to format for discernment.
+
+#### Topic
+
+We did not find statistically significant differences in discernment and skepticism bias across news topics, when distinguishing between the categories "political" (`r descriptives$topic$political$n_papers` articles), "covid" (`r descriptives$topic$covid$n_papers` articles) and "other" (`r descriptives$topic$other$n_papers` articles), a category which regroups all not explicitly as "covid "or "political" labeled news topics by the authors for the respective papers, and which includes news topics reaching from health, cancer and science, to economics, history and military covering news.
+
+#### Sources
+
+In line with past findings, we did not observe any difference in discernment between studies displaying the source of the news items (`r descriptives$source$source$n_observation_id` effects) and studies that did not (`r descriptives$source$no_source$n_observation_id` effects; for `r descriptives$effects - (descriptives$source$source$n_observation_id + descriptives$source$no_source$n_observation_id)` this information was not explicitly provided). We do not find a difference regarding skepticism bias either.
+
+#### Political Concordance
+
+The moderators investigated above were (mostly) not experimentally manipulated within studies, but instead varied between studies, which impedes causal inference. Political concordance is an exception in this regard. It was manipulated within `r descriptives$concordance$n_sample$value` different samples, across `r descriptives$concordance$n_paper$value` different papers. In those experiments, typically, a pre-test establishes the political slant of news headlines (e.g. pro-republican vs. pro-democrat). In the main study, participants then rate the accuracy for news items of both political slants, and provide information about their own political stance. The ratings of items are then grouped into concordant or discordant (e.g. pro-republican news rated by Republicans will be coded as concordant while pro-republican news rated by Democrats will be coded as discordant).
+
+Political concordance had no statistically significant effect on discernment. However, participants displayed a skepticism bias only when rating politically discordant headlines (see Fig. \@ref(fig:concordance)). In particular, when rating concordant items, participants did not show a skepticism bias (Baseline skepticism bias concordant items = `r list_moderators_error$Concordance$intercept$estimate` `r list_moderators_error$Concordance$intercept$ci`, p `r list_moderators_error$Concordance$intercept$p.value`), while for discordant news items, participants displayed a positive skepticism bias ($\Delta$ skepticism bias = `r list_moderators_error$Concordance$political_concordancediscordant$estimate` `r list_moderators_error$Concordance$political_concordancediscordant$ci`, p `r list_moderators_error$Concordance$political_concordancediscordant$p.value`). In other words, participants were not gullible when facing concordant news headlines (as would have suggested a negative skepticism bias), but were skeptical when facing discordant ones.
+
+(ref:concordance) Distribution of effect sizes for politically concordant and discordant items. The black dots represent the predicted average of the meta-regression, the black horizontal bars the 95% confidence intervals. Note that the figure does not represent the different weights of the data points, but that these weights are taken into account in the meta-regression.
+
+```{r concordance, fig.cap="(ref:concordance)"}
+## plot effects
+concordance_plot_accuracy <- plot_concordance(outcome = "accuracy")
+concordance_plot_error <- plot_concordance(outcome = "error")
+
+ggarrange(concordance_plot_accuracy, 
+          concordance_plot_error + 
+            theme(axis.text.y = element_blank(),
+                  axis.ticks.y = element_blank(),
+                  axis.title.y = element_blank()))
+```
+
+## Individual level data
+
+```{r, message=FALSE}
+individual_level_subset <- read_csv("data/individual_level_subset.csv") 
+
+individual_level <- individual_level_subset %>% 
+  summarise(n_papers = n_distinct(paper_id), 
+            n_subjects = n_distinct(unique_participant_id),
+            n_observations = n_distinct(observation_id))
+```
+
+In the results above, accuracy ratings were averaged across participants. It is unclear how these average results generalize to the individual level. Do they hold for most participants? Or are they driven by a relatively small group of participants with excellent discernment skills, or, respectively, extreme skepticism? For `r individual_level$n_papers` articles ($N_{Participants}$ = `r individual_level$n_subjects`, $N_{Observations}$ = `r individual_level$n_observations`), we have the raw data for all ratings that individual participants made on each news headline they saw. On this data, we ran a descriptive, non-preregistered analysis: We calculated a discernment and skepticism bias score for each participant based on all the news items they were rating. To compare across different scales, we transposed all accuracy scores on a scale from 0 to 1, resulting in a range of possible values from -1 to 1 for both discernment and skepticism bias.
+
+```{r by-participant-outcome}
+# compute standardized accuracy and error measures 
+outcomes_by_participant <- individual_level_subset %>% 
+  # treatment conditions
+  filter(condition == "control") %>% 
+  # remove NA's for accuracy
+  drop_na(accuracy) %>% 
+  mutate(
+      # standardize_accuracy
+      across(c(accuracy), 
+             ~ifelse(
+               # Binary and 0 to 1 scale are already on the wanted scale
+               scale == "binary" |
+                 scale == "1", .x, 
+               # for all other numeric scales
+               (.x-1)  / (scale_numeric - 1)), 
+             .names = "std_{col}"),
+      # standardize_error
+      across(c(error), 
+             ~ifelse(
+               # Binary and 0 to 1 scale are already on the wanted scale
+               scale == "binary" |
+                 scale == "1", .x, 
+               # for all other numeric scales
+               .x  / (scale_numeric - 1)), 
+             .names = "std_{col}"), 
+  ) %>% 
+  # calculate averages scores per participant and veracity
+  group_by(unique_sample_id, unique_participant_id, veracity) %>%
+  summarize(mean_std_accuracy = mean(std_accuracy), 
+         mean_std_error = mean(std_error),
+  ) %>% 
+  # turn data frame into wide format to be able to calculate discernment
+  pivot_wider(names_from = veracity, 
+              values_from = c(mean_std_accuracy, mean_std_error)) %>% 
+  # calculate discernment and skepticism  bias
+  mutate(discernment = mean_std_accuracy_true - mean_std_accuracy_fake, 
+         response_bias = mean_std_error_true - mean_std_error_fake) %>% 
+  ungroup()
+
+```
+
+(ref:individual-level-plot) Distribution of average discernment and skepticism bias scores of individual participants in the subset of studies that we have raw data on. We standardized original accuracy ratings to range from 0 to 1, to be able to compare across scales. Therefore, the worst possible score is -1 where, for discernment, an individual classified all news wrongly, and for skepticism bias, an individual classified all true news correctly (as true) and all false news incorrectly (as true). The best possible score is 1 where, for discernment, an individual classified all news correctly, and for skepticism bias, an individual classified all true news incorrectly (as false) and all false news correctly (as false). The percentage labels (from left to right) represent the share of participants with a negative score, a score of exactly 0, and a positive score, for both measures respectively.
+
+```{r individual-level-plot, fig.cap="(ref:individual-level-plot)"}
+# plot
+
+# Main plot data: shape data to long format
+data <- outcomes_by_participant %>% 
+  pivot_longer(c(discernment, response_bias),
+               names_to = "outcome", 
+               values_to = "value") %>% 
+  # make nicer names
+  mutate(outcome = ifelse(outcome == "discernment", "Discernment", 
+                          "Skepticism bias"))
+
+# summary data for labels
+# table 
+summary_data <- data %>% 
+  drop_na(value) %>% 
+  mutate(valence = ifelse(value > 0, "positive", 
+                          ifelse(value == 0, "neutral", 
+                                 "negative")
+                          )
+         ) %>% 
+  group_by(valence, outcome) %>% 
+  summarize(n_subj = n_distinct(unique_participant_id)) %>% 
+    pivot_wider(names_from = outcome, 
+              values_from = n_subj) %>% 
+  # relative frequency
+  ungroup() %>% 
+  mutate(
+    rel_discernment = Discernment / sum(Discernment),
+    rel_response_bias = `Skepticism bias` / sum(`Skepticism bias`)
+    ) %>% 
+  pivot_longer(c(rel_discernment, rel_response_bias), 
+               names_to = "outcome", 
+               values_to = "value") %>% 
+  mutate(outcome = ifelse(outcome == "rel_discernment", "Discernment", 
+                          "Skepticism bias"), 
+         label = paste0(round(value, digits = 4)*100, " %"),
+         x_position = case_when(valence == "negative" ~ -0.5,
+                                valence == "neutral" ~ 0,
+                                valence == "positive" ~ 0.5), 
+         y_position = 1.5)
+
+# make plot
+individual_level_plot <- ggplot(data, aes(x = value, fill = outcome, color = outcome)) +
+  geom_density(alpha = 0.5)+
+  # add line at 0
+  geom_vline(xintercept = 0, 
+             linewidth = 0.5, linetype = "24", color = "grey") +
+  # scale
+  scale_x_continuous(breaks = seq(from = -1, to = 1, by = 0.2)) +
+  # add labels for share of participants
+  geom_label(inherit.aes = FALSE, data = summary_data,
+             aes(x = x_position, y = y_position, 
+                 label = label),
+             alpha = 0.6,
+             color = "grey50", size = 3, show.legend = FALSE) +
+  # colors 
+  scale_color_viridis_d(option = "turbo", begin = 0.25, end = 1)+
+  scale_fill_viridis_d(option = "turbo", begin = 0.25, end = 1) +
+  # labels and scales
+  labs(x = "Standardized scores \n (scale from -1 to 1)", y = "Density") +
+  guides(fill = FALSE, color = FALSE) +
+  plot_theme +
+  theme(legend.position = "bottom",
+        axis.text.y = element_blank(),
+        strip.text = element_text(size = 14)) +
+  facet_wrap(~outcome)
+
+individual_level_plot
+```
+
+```{r}
+individual_level_valence <- summary_data %>% 
+  # re-label for inline reporting to work
+  mutate(outcome = ifelse(outcome == "Skepticism bias", "bias", outcome)) %>% 
+  super_split(outcome, valence)
+```
+
+As shown in Fig. \@ref(fig:individual-level-plot), `r individual_level_valence$Discernment$positive$label` of individual participants had a positive discernment score, and `r individual_level_valence$bias$positive$label` of participants had a positive skepticism bias score. Therefore, our main results based on mean ratings across participants seem to be representative of individual participants (see Appendix \@ref(individual-level) for further discussion).
+
+# Discussion
+
+This meta-analysis sheds light on some of the most common fears voiced about false news. In particular, we investigated whether people are able to discern true from false news, and whether they are better at judging the veracity of true news or false news (skepticism bias). Across `r descriptives$effects` effect sizes ($N_{participants}$ = `r descriptives$participants`) from `r descriptives$countries` countries across `r descriptives$continents` continents, we found that people rated true news as much more accurate than fact-checked false news ($d_{discernment}$ = `r list_model_accuracy$overall$estimate` `r list_model_accuracy$overall$ci`, p `r list_model_accuracy$overall$p.value`) and are slightly better at rating fact-checked false news as inaccurate than at rating true news as accurate ($d_{bias}$ = `r list_model_error$overall$estimate` `r list_model_error$overall$ci`, p `r list_model_error$overall$p.value`).
+
+The finding that people can discern true from false news when prompted to do so has important implications for interventions against misinformation. First, it suggests that most people do not lack the skills to spot false news – at least the kind of fact-checked false news used in the studies included in our meta-analysis. If people don’t lack the skills to spot false news, why do they sometimes fall for false news? In some contexts, people may lack the motivation to use their discernment skills or may only apply them selectively [@pennycook2021; @rathje2023]. Thus, instead of teaching people how to spot false news, it may be more fruitful to target motivations, either by manipulating features of the environment in which people encounter news [@capraroThinkThisNews; @globigChangingIncentiveStructure2023], or by intrinsically motivating people to use their skills and pay more attention to accuracy [@pennycook2021]. For instance, it has been shown that design features of current social media environments sometimes impede discernment [@epsteinSocialMediaContext2023]. Similarly, it has been suggested that interventions against misinformation should build on the tacit knowledge that people (already) rely on to detect false news, instead of giving people explicit tips and guidelines that may be difficult for people to internalize as tacit knowledge [@modirrousta-galianWordlessWisdomDominant2023].
+
+Our results do not speak to the reasons why participants were able to discern true from false news. Participants were generally asked to rate culturally relevant news stories, such as Brazilians rating Brazilian news stories. Thus, participants most likely relied on some prior knowledge to evaluate news veracity. Participants would probably not have been capable of discerning news stories on which they completely lack relevant prior knowledge, e.g. culturally distant news stories.
+
+Second, the fact that people can, on average, discern true from false news lends support to crowdsourced fact-checking initiatives. While fact-checkers cannot keep up with the pace of false news production, the crowd can, and it has been shown that even small groups of participants perform as well as professional fact-checkers [@allenScalingFactcheckingUsing2021; @martelCrowdsCanEffectively2022]. The cross-cultural scope of our findings suggests that these initiatives may be fruitful in many countries across the world. In every country included in the meta-analysis, participants on average rated true news as more accurate than false news (see Appendix \@ref(country-comparison)). Our results are also informative for the work of fact-checkers. In recent years, fact-checking organizations such as PolitiFact have mostly focused on debunking false news at the expense of confirming true news [@hoesLeveragingChatGPTEfficient2023]. Yet, we show that people also need help to identify true news as true. Moreover, since people are quite good at discerning true from false news, fact-checkers may want to focus on headlines that are less clearly false or true. However, we cannot rule out that people’s current discerning skills stem in part from the work of fact-checkers.
+
+The fact that people disbelieve true news slightly more than they believe fact-checked false news speaks to the nature of the misinformation problem and how to fight it: the problem may be less that people are gullible, and fall for falsehoods too easily, but instead that people are excessively skeptical, and do not believe reliable information enough [@altayMisinformationMisinformationConceptual; @mercierNotBornYesterday2020]. Even assuming that the rejection of true news and the acceptance of false news are of similar magnitude (and that both can be improved), given that true news are much more prevalent in people's news diet than false news [@allenEvaluatingFakeNews2020], true news skepticism may be more detrimental to the accuracy of people's beliefs than false news acceptance [@acerbiResearchNoteFighting2022]. This skepticism is concerning in the context of the low and declining participation, trust and interest in news across the world [@altayNewsParticipationDeclining2024], as well as the attacks of populist leaders on the news media [@vanduynPrimingFakeNews2019], and growing news avoidance [@newmanDigitalNewsReport2023]. Interventions aimed at reducing misperceptions should therefore consider increasing the acceptance of true news in addition to reducing the acceptance of false news [@acerbiResearchNoteFighting2022; @altaySkepticismFramingMedia2023]. At the very least, when testing interventions, researchers should evaluate their effect on both true and false news, not just false news [@guayHowThinkWhether2022]. At best, interventions should use methods that allow to estimate discrimination while accounting for response bias, such as Signal Detection Theory, and make sure that apparent increases in discernment are not due to more conservative response bias [@highamMeanRatingDifference2024a; @modirrousta-galianGamifiedInoculationInterventions2023]. This is all the more important given that recent evidence suggests that many interventions against misinformation, such as media literacy tips [@hoesProminentMisinformationInterventions2023], fact-checking [@bachmannStudyingDownstreamEffects2023], or educational games aimed at inoculating people against misinformation [@modirrousta-galianGamifiedInoculationInterventions2023], may reduce misperceptions of false news at the expense of true news.
+
+The skepticism bias documented here may stem from the fact that it’s easier for something to be false than for something to be true. Falsifying a statement is easier than confirming it: there only needs to be one black swan to falsify the statement that all swans are white whereas confirming this statement requires much more effort. This may explain why participants were more eager to classify news stories as false rather than true. Yet, it does not explain why the literature on interpersonal communication typically finds a truth bias and why people tend to show an acquiescence bias rather than a rejection bias[@hillAcquiescenceBiasInflates2023; @brashierJudgingTruth2020] .
+
+We also investigated various moderators of discernment and skepticism bias. We found that discernment was greater in studies conducted in the United States compared to the rest of the world. This could be due to the inclusion of many countries from the Global South, where belief in misinformation and conspiracy theories has been documented to be higher [@alperWhenConspiracyTheories2021]. In line with past work [@diasEmphasizingPublishersDoes2020], the presence of a source had no statistically significant effects. The topic of the news also had no statistically significant effects on discernment and skepticism bias. Participants showed greater skepticism (higher skepticism bias) in studies that presented headlines in a social media format (with an image and lede) or along with an image compared to studies that used plain headlines. This suggests that the skepticism of true news documented in this meta-analysis may be partially due to the social media format of the news headlines. Past work has shown that people report trusting news on social media less [@montalverneTrustGapHow2022; @newmanReutersInstituteDigital2022], and experimental manipulations have shown that the Facebook news format reduces belief in news [@besaluCredibilityDigitalPolitical2021; @karlsenSocialMediaTrust2023] --although the causal effects documented in these experiments are much smaller than observational differences in reported trust levels between news on social media and on news outlets [@agadjanianPlatformPenaltyNews2023]. Low trust in news on social media may be a good thing, given that on average news on social media may be less accurate than news on news websites, but it is also worrying given that most of news consumption worldwide is shifting online and on social media in particular [@newmanDigitalNewsReport2023].
+
+The political concordance of the news had no effect on discernment, but participants were excessively skeptical of politically discordant news. That is, participants were equally skilled at discerning true from false news for concordant and discordant items, but they rated news generally (true and false) as more false when politically discordant. This finding is in line with recent evidence on partisan biases in news judgments [@gawronskiTruthSensitivityPartisan2023], and supports the idea that people are not excessively gullible of news they agree with, but are instead excessively skeptical of news they disagree with [@mercierNotBornYesterday2020; @troucheVigilantConservatismEvaluating2018]. It suggests that interventions aimed at reducing partisan motivated reasoning, or at improving political reasoning in general, should focus more on increasing openness to opposing viewpoints than on increasing skepticism towards concordant viewpoints. Future studies should investigate whether the effect of congruence is specific to politics or if it holds across topics, and compare it to a baseline by including neutral items.
+
+Our meta-analysis has a number of conceptual limitations. First, participants evaluated the news stories in artificial settings that do not mimic the real-world. For instance, the mere fact of asking participants to rate the accuracy of the news stories may have increased discernment by increasing attention to accuracy [@pennycook2021]. When browsing on social media, people may be less discerning (and perhaps less skeptical) than in experimental settings because they would pay less attention to accuracy [@epsteinSocialMediaContext2023]. However, given people's low exposure to misinformation online [@altayQuantifyingInfodemicPeople2022], most people may protect themselves from misinformation not by detecting misinformation on the spot, but by relying on the reputation of the sources and avoiding unreliable sources [@altayWhyFewPeople]. Second, accuracy ratings were averaged across participants and thus better reflect the wisdom of the crowd than the skills of individuals. Yet, past work [@allenScalingFactcheckingUsing2021] shows that most individuals appear able to discern true from false news better than chance. In line with this, studies for which we have raw data show that `r individual_level_valence$Discernment$positive$label` of participants rated true news as more accurate than false news, and `r individual_level_valence$bias$positive$label` of participants displayed a skepticism bias (see Fig. \@ref(fig:individual-level-plot); see also Appendix \@ref(individual-level) for additional analyses on individual-level data). Third, our results reflect choices made by researchers about news selection. As we lay out in Appendix \@ref(selection-bias), we believe that this selection bias mostly concerns the false news items. The vast majority of studies in our meta-analysis relied on fact-checked false news, determined by fact-checking websites (e.g. Snopes, PolitiFact). By contrast, three papers [@garrettConservativesSusceptibilityPolitical2021; @aslettOnlineSearchesEvaluate2024; @allenScalingFactcheckingUsing2021] automated their news selection by scraping headlines from media outlets in real-time, and had both participants and fact-checkers (or the researchers themselves, in the case of @garrettConservativesSusceptibilityPolitical2021) rated the veracity of the headlies shortly after. The three studies (`r descriptives$automated_samples$Allen_2021$n_effect_sizes + descriptives$automated_samples$Aslett_2024$n_effect_sizes + descriptives$automated_samples$Garrett_2021$n_effect_sizes` effect sizes; `r descriptives$automated_samples$Allen_2021$n_participants + descriptives$automated_samples$Aslett_2024$n_participants + descriptives$automated_samples$Garrett_2021$n_participants` participants; all in the United States) find (i) lower discernment and (ii) a negative skepticism (i.e. a credulity) bias. As we discuss in Appendix \@ref(selection-bias), this is likely because they included false news that are harder to fact-check (and not typically fact-checked) or because the news are less false than the typical fact-checked false news. Yet, more work is needed to investigate whether the skepticism bias documented here is due to the selection of fact-checked false news or to something else. This highlights the importance of news selection in misinformation research: Researchers need to think carefully about what population of news they sample from, and be clear about the generalizability of their findings [@pennycookPracticalGuideDoing2021; @altayMisinformationMisinformationConceptual]. Overall, our results are informative about people's ability to spot fact-checked false news, and about their doubts towards mainstream true news. However, our results also suggest that people discern worse for more representative samples of misinformation news. More research designed to overcome news selection bias is needed to provide a solid account of how much worse.
+
+Our meta-analysis further has methodological limitations which we address in a series of robustness checks in the appendix. We show that our results hold across alternative effect size estimators (Appendix \@ref(effect-sizes)). We also show that we obtain similar results when running a participant-level analysis on a subset of studies for which we have raw data (Appendix \@ref(individual-level)) and when relying on d’ (sensitivity) and c (response bias) in Signal Detection Theory for that subset. A comparison of binary and Likert-scale ratings suggests that skepticism bias stems partly from mis-classifications, partly from degrees of confidence (Appendix \@ref(binary)).
+
+In conclusion, we found that in experimental settings, people are able to discern mainstream true news from fact-checked false news, but when they err, they tend to do so on the side of skepticism more than on the side of gullibility (although the effect is small and likely contingent on false news selection). These findings lend support to crowdsourced fact-checking initiatives, and suggest that, to improve discernment, there may be more room to increase the acceptance of true news than to reduce the acceptance of false news.
+
+# Methods {#methods}
+
+## Data
+
+We undertook a systematic review and meta-analysis of the experimental literature on accuracy judgments of news, following the PRISMA guidelines [@page2021]. All records resulting from our literature searches can be found on the [OSF project page](https://osf.io/96zbp/?view_only=d2f3147f652e44e2a0414d7d6d9a6c29). We documented rejection decisions for all retrieved papers. They, too, can be found on the [OSF project page](https://osf.io/96zbp/?view_only=d2f3147f652e44e2a0414d7d6d9a6c29).
+
+(ref:prisma-flowchart) 2020 PRISMA flow diagram for new systematic reviews.
+
+```{r prisma-flowchart, fig.cap="(ref:prisma-flowchart)"}
+knitr::include_graphics("literature_search/PRISMA_2020_flow_diagram.pdf")
+```
+
+### Deviations from eligibility criteria
+
+We followed our eligibility criteria (as outlined above), with 4 exceptions. We rejected one paper based on a criterion that we had not previously set: scale asymmetry. @baptistaInfluencePoliticalIdeology2021 asked participants: "According to your knowledge, how do you rate the following headline?", providing a very asymmetrical set of answer options ("1---not credible; 2---somehow credible; 3---quite credible; 4---credible; 5---very credible"). The paper provides 6 effect sizes, all of which strongly favor our second hypothesis (one effect being as large as d = 2.54). We decided to exclude this paper from our analysis because of its very asymmetric scale (no clear scale midpoint, and labels not symmetrically mapping onto a false/true dichotomy, by contrast to all other response scales included here). Further, we stretched our criterion for real-world news on three instances. @maertensMisinformationSusceptibilityTest2021 and @roozenbeekSusceptibilityMisinformationCOVID192020 used artificial intelligence trained on real-world news to generate false news. @bryanovWhatDrivesPerceptions2023 had journalists create the false news items. We reasoned that asking journalists to write news should be similar enough to real-wolrd news, and that LLMs already produce news headlines that are indistinguishable from real news, so it should not make a big difference.
+
+### Literature search
+
+Our literature review is based on two systematic searches. We conducted our first search on March 2, 2023 using Scopus (search string: '"false news" OR "fake news" OR "false stor\*" AND "accuracy" OR "discernment" OR "credibilit\*" OR "belief" OR "susceptib\*"') and google scholar (search string: '"Fake news" \| "False news"\|"False stor\*" "Accuracy" \| "Discernment"\|"Credibility"\|"Belief"\|"Suceptib\*", no citations, no patents'). On Scopus, given the initially high volume of papers (12425), we excluded papers not written in English, that were not articles or conference papers, and that were from disciplines that are likely irrelevant for the present search (e.g., Dentistry, Veterinary, Chemical Engineering, Chemistry, Nursing, Pharmacology, Microbiology, Materials Science, Medicine) or unlikely to use an experimental design (e.g. Computer Science, Engineering, Mathematics, see Appendix \@ref(lit-review) for detailed search string). After these filters were applied, we ended up with `r prisma$scoups_initial` results. The Google Scholar search was intended to identify important pre-prints or working papers that the Scopus search would have missed. We only considered the first `r prisma$google_initial` results of that search--a limit imposed by the "Publish or Perish" software we used to store Google Scholar search results in a data frame.
+
+After submitting a manuscript version, reviewers remarked that not including the terms "misinformation" or "disinformation" in our search string might have omitted relevant results. On March 22nd, 2024, we therefor conducted a second, pre-registered (<https://osf.io/yn6r2>) search using an extended query string (search string for both Scopus and Google Scholar: '"false news" OR "fake news" OR "false stor\*" OR "misinformation" OR "disinformation" ) AND ( "accuracy" OR "discernment" OR "credibilit\*" OR "belief" OR "suceptib\*" OR "reliab\*" OR "vulnerabi\*"'; see Appendix \@ref(lit-review) for detailed search string). After removing duplicates--`r prisma$duplicates_initial_revisions_scopus` between the first and the second Scopus search and `r prisma$duplicates_initial_revisions_google` between the first and the second Google Scholar search--the second search yielded an additional `r prisma$scopus_revisions - prisma$duplicates_initial_revisions_scopus` results for Scopus and `r prisma$google_revisions - prisma$duplicates_initial_revisions_google` results for Google Scholar. In total, the Scopus searches yielded `r prisma$scopus`, the Google Scholar searches `r prisma$google` unique results.
+
+We identified and removed `r prisma$duplicates` duplicates between the Google Scholar and the Scopus searches and ended up with `r prisma$screened` documents for screening. We had two screening phases: first titles, second abstracts. Both authors screened the results independently. In case of conflicting decisions, an article passed onto the next stage (i.e. receive abstract screening or full text assessment). Screening was done based on titles and abstracts only, so that the screeners would not be influenced by information on the authors or the publishing journal. The vast majority of documents (`r prisma$screening_excluded`) had irrelevant titles and were removed during that phase. Most irrelevant titles were not about false news or misinformation (e.g. "Formation of a tourist destination image: Co-occurrence analysis of destination promotion videos"), and some were about false news or misinformation but were not about belief or accuracy (e.g. "Freedom of Expression and Misinformation Laws During the COVID-19 Pandemic and the European Court of Human Rights"). We stored the remaining `r prisma$retrieval_databases` records in the reference management system Zotero for retrieval. Of those, we rejected a total of `r prisma$exluded_databases` papers that did not meet our inclusion criteria. We rejected `r prisma$exluded_databases_abstract` papers based on their abstract and `r prisma$exluded_databases_fulltext` after assessment of the full text. We documented all rejection decisions, available on the [OSF project page](https://osf.io/96zbp/?view_only=d2f3147f652e44e2a0414d7d6d9a6c29). We included the remaining `r prisma$retrieval_databases - prisma$exluded_databases` papers from the systematic literature search. To complement the systematic search results, we conducted forward and backward citation search through Google Scholar. We also reviewed additional studies that we had on our computers and papers we found scrolling through twitter (mostly unpublished manuscripts). Taken together, we identified an additional `r prisma$retrieval_other` papers via those methods. Of these, we excluded `r prisma$excluded_other` papers after full text assessment because they did not meet our inclusion criteria. For these papers, too, we documented our exclusion decisions. They can be found together with the ones of the systematic search on the [OSF project page](https://osf.io/96zbp/?view_only=d2f3147f652e44e2a0414d7d6d9a6c29). We included the remaining `r prisma$retrieval_other - prisma$excluded_other` papers. In total, we included `r prisma$studies_included` papers in our meta analysis, `r descriptives$peer_review$yes$n_papers` of which were peer-reviewed and `r descriptives$peer_review$no$n_papers` grey literature (reports and working papers). We retrieved the relevant summary statistics directly from the paper for `r prisma$studies_included_paper` papers, calculated them ourselves based on publicly available raw data for `r prisma$studies_included_data` papers, and got them from the authors after request for `r prisma$studies_included_authors` papers.
+
+## Statistical methods
+
+All data and code are publicly available on the [OSF project page](https://osf.io/96zbp/?view_only=d2f3147f652e44e2a0414d7d6d9a6c29). Unless explicitly mentioned otherwise, we pre-registered all reported analyses. Our choice of statistical models was informed by simulations, which can also be found on the [OSF project page](https://osf.io/96zbp/?view_only=d2f3147f652e44e2a0414d7d6d9a6c29). We conducted all analyses in R [@rcoreteam2022] using Rstudio [@positteam2023] and the `tidyverse` package [@wickham2019]. For effect size calculations, we rely on the `escalc()`, for models on the `rma.mv()`, for clustered standard errors on the `robust()` function, all from the `metafor` package [@viechtbauer_conducting_2010].
+
+### Deviations from pre-registration
+
+We pre-registered standardized mean changes using change score standardization (SMCC) as an estimator for our effect sizes [@gibbons_estimation_1993]. However, in line with Cochrane guidelines [@higgins_cochrane_2019], we chose to rely on the more common Cohen's d for the main analysis. We report the pre-registered SMCC (along with other alternative estimators) in Appendix \@ref(effect-sizes). All estimators yield similar results. We did not pre-register considering scale symmetry, proportion of true news and false news selection (taken from fact checking sites vs. verified by researchers) as moderator variables. We report the results regarding these variables in Appendix \@ref(moderators).
+
+### Outcomes
+
+We have two complementary measures of assessing the quality of people's news judgment. The first measure is discernment. It measures the overall quality of news judgment across true and false news. We calculate discernment by subtracting the mean accuracy ratings of false news from the mean accuracy ratings of true news, such that more positive scores indicate better discernment. However, discernment is a limited diagnostic of the quality of people's news judgment. Imagine a study A in which participants rate 50% of true news and 20% of false news as accurate, and a study B finding 80% of true news and 50% of false news rated as accurate. In both cases, the discernment is the same: Participants rated true news as more accurate by 30 percentage points than false news. However, the performance by news type is very different. In study A, people do well for false news - they only mistakenly classify 20% as accurate - but are at chance for true news. In study B, it's the opposite. We therefore use a second measure: skepticism bias. For any given level of discernment, it indicates whether people's judgments were better on true news or on false news, and to what extent. First, we calculate an error for false and true news separately, which we define as the distance of participants' actual ratings to the best possible ratings. For example, for study A, the mean error for true news is 50% (100%-50%), because in the best possible scenario, participants would have classified 100% of true news as true. The error for false news in Study A is 20% (20%-0%), because the best possible performance for participants would have been to classify 0% of false news as accurate. We calculate skepticism bias by subtracting the mean error for false news from the mean error for true news. For example, for Study A, the skepticism bias is 30% (50%-20%). A positive skepticism bias indicates that people doubt true news more than they believe false news.
+
+### Effect sizes
+
+The studies in our meta analysis used a variety of response scales, including both binary (e.g. "Do you think the above headline is accurate? - Yes, No") and continuous ones (e.g. "To the best of your knowledge, how accurate is the claim in the above headline" 1 = Not at all accurate, 4 = Very accurate). To be able to compare across the different scales, we calculated standardized effects, i.e. effects expressed in units of standard deviations. Precisely, we calculated Cohen's d as
+
+$$
+\text{Cohen's d} = \frac{\bar{x}_{\text{true}} - \bar{x}_{\text{false}}}{SD_{\text{pooled}}}
+$$ with
+
+$$
+SD_{\text{pooled}} = \sqrt{\frac{SD_{\text{true}}^2+SD_{\text{false}}^2}{2}}
+$$
+
+The vast majority of experiments (`r descriptives$design$within$n` out of `r descriptives$effects` effects) in our meta analysis manipulated news veracity within participants, i.e. having participants rate both false and true news. Following the Cochrane manual, we account for the dependency between ratings that this design generates when calculating the standard error for Cohen's d. Precisely, we calculate the standard error for within participant designs as
+
+$$
+SE_{\text{Cohen's d (within)}} = \sqrt{\frac{2(1-r_{\text{true},\text{false}})}{n}+\frac{\text{Cohen's d}^2}{2n}}
+$$
+
+where $r$ is the correlation between true and false news. Ideally, for each effect size (i.e. the meta-analytic units of observation) in our data, we need the estimate of $r$. However, this correlation is generally not reported in the original papers. We could only obtain it for a subset of samples for which we collected the summary statistics ourselves, based on the raw data. Based on this subset of correlations, we calculated an average correlation, which we then imputed for all effect size calculations. This approach is in line with the [Cochrane recommendations for crossover trials](https://training.cochrane.org/handbook/current/chapter-23#section-23-2-7-3) [@higgins_cochrane_2019]. In our case, this average correlation is `r average_correlation %>% round(digits = 2)`.
+
+For the `r descriptives$design$between$n` (out of `r descriptives$effects`) effects from studies that used a between participant design, we calculated the standard error as
+
+$$
+SE_{\text{Cohen's d (between)}} = \sqrt{\frac{n_{\text{true}}+n_{\text{false}}}{n_{\text{true}}n_{\text{false}}}+\frac{\text{Cohen's d}^2}{2(n_{\text{true}}+n_{\text{false}})}}
+$$
+
+For all effect size calculations, we defined the sample size $n$ as the number of instances of news ratings. That is, we multiplied the number of participants with the number of news items rated per participant.
+
+### Models
+
+In our models for the meta analysis, each effect size was weighted by the inverse of its standard error, thereby giving more weight to studies with larger sample sizes. We used random effects models, which assume that there is not only one true effect size but a distribution of true effect sizes [@harrer2021]. These models assume that variation in effect sizes is not only due to sampling error alone, and thereby allow to model other sources of variance. We estimated the overall effect of our outcome variables using a three-level meta-analytic model with random effects on the sample and the publication level. This approach allowed us to account for the hierarchical structure of our data, in which samples (level three) contribute multiple effects (level two)[^4]. Multiple effects per sample occur, for example, when separate accuracy ratings are available by news topic, or when follow-up studies were conducted on the same participants. However, the multi-level models do not account for dependencies in sampling error. When one same sample contributes several effect sizes, one should expect their respective sampling errors to be correlated [@harrer2021]. To account for dependency in sampling errors, we computed cluster-robust standard errors, confidence intervals, and statistical tests for all estimated effect sizes.
+
+[^4]: Level 1 being the participant level of the original studies, see @harrer2021.
+
+To assess the effect of moderator variables, we calculated meta regressions. We calculated a separate regression for each moderator, by adding the moderator variable as a fixed effect to the multilevel meta models presented above. We pre-registered a list of six moderator variables to test. Those included the *country* of studies (levels: United States vs. all other countries), *political concordance* (levels: politically concordant vs. politically discordant), *news family* (levels: political, including both concordant and discordant vs. covid related vs. other, including categories as diverse as history, environment, health, science and military related news items), the *format* in which the news were presented (levels: headline only vs. headline and picture vs. headline, picture and lede), whether news items were accompanied by a *source* or not, and the *response scale* used (levels: 4-point vs. binary vs. 6-point vs. 7-point vs. other, for all other numeric scales that were not frequent). We ran an additional regressiosn for two non-preregistered variables, namely the *symmetry of scales* (levels: perfectly symmetrical vs. imperfectly symmetrical) and *false news selection* (levels: taken from fact check sites vs. verified by researchers). We further descriptively checked whether the *proportion of true news* among all news would yield differences.
+
+### Publication bias
+
+We ran some standard procedures for detecting publication bias. However, a priori we did not expect publication bias to be present because our variables of interest were not those of interest to the researchers of the original studies: Researchers generally set out to test factors that alter discernment, and not the state of discernment in the control group. No study measured skepticism bias in the way we define it here.
+
+(ref:funnel) Funnel plots for discernment and skepticism bias. Dots represent effect sizes. In the absence of publication bias and heterogeneity, one would then expect to see the points forming a funnel shape, with the majority of the points falling inside of the pseudo-confidence region centered around the average effect estimate, with bounds of ±1.96 SE (the standard error value from the y-axis). The dashed red regression line illustrates the estimate of the Egger's regression test. For both outcomes, the slope differs significantly from zero, see Appendix \@ref(publication-bias).
+
+```{r, include=FALSE}
+# Create funnel plot. 
+funnel_raw_discernment <- viz_funnel(robust_model_accuracy, egger = TRUE,
+                         xlab = "Cohen's d", text_size = 5,
+                         contours_col = "Greys")
+
+# Convert funnel plot into ggplot object so it can be ggarranged. 
+funnel_discernment <- funnel_raw_discernment + ggtitle("(a) Discernment") + plot_theme +
+  theme(plot.title = element_text(hjust = 0.5), 
+        axis.text.x = element_text(size=12),
+        axis.text.y = element_text(size=12)) 
+
+# Create funnel plot. 
+funnel_raw_bias <- viz_funnel(robust_model_error, egger = TRUE,
+                         xlab = "Cohen's d", text_size = 5,
+                         contours_col = "Greys")
+
+# Convert funnel plot into ggplot object so it can be ggarranged. 
+funnel_bias <- funnel_raw_bias + ggtitle("(b) Skepticism  bias") + plot_theme +
+  theme(plot.title = element_text(hjust = 0.5), 
+        axis.text.x = element_text(size=12),
+        axis.text.y = element_text(size=12)) 
+```
+
+```{r funnel, fig.cap="(ref:funnel)"}
+ggarrange(funnel_discernment, 
+          funnel_bias + 
+            theme(axis.text.y = element_blank(),
+                  axis.ticks.y = element_blank(),
+                  axis.title.y = element_blank()))
+
+```
+
+Regarding discernment, we find evidence that smaller studies tend to report larger effect sizes, according to Egger's regression test (see Fig. \@ref(fig:funnel); see also Appendix \@ref(publication-bias)). Regarding skepticism bias, we find the opposite. However, it is unclear how meaningful these patterns are. As illustrated by the funnel plot, there is generally high between-effect size heterogeneity: Even when focusing only on the most precise effect sizes (top of the funnel), the estimates vary substantially. It thus seems reasonable to assume that most of the dispersion of effect sizes does not arise from studies' sampling error, but from studies estimating different true effects. Further, even the small studies are relatively high powered, suggesting that they would have yielded significant, publishable results even with smaller effect sizes. Lastly, Egger's regression test can lead to an inflation of false positive results when applied to standardized mean differences [@pustejovsky2019; @harrer2021]. We do not find evidence for asymmetry regarding skepticism bias.
+
+(ref:p-curve) P-curves for discernment and skepticism bias. The p-curve shows the percentage of effect sizes for a given p value within the range of 0.1 and 0.5. All values smaller than 0.01 are rounded to that value. The reference lines indicate the expected percentage of studies for a given p value, assuming that there is a true effect and certain statistical power to detect it (either 0% or 30% power). The observed p-curve is negatively sloped and heavily right skewed (the tail points to the right) for both outcomes, which suggests no widespread p-hacking.
+
+```{r, include=FALSE}
+pcurve_discernment <- plot_pcurve(accuracy_effect)
+pcurve_bias <- plot_pcurve(error_effect)
+```
+
+```{r p-curve, fig.cap="(ref:p-curve)"}
+ggarrange(pcurve_discernment, 
+          pcurve_bias + 
+            theme(axis.text.y = element_blank(),
+                  axis.ticks.y = element_blank(),
+                  axis.title.y = element_blank()))
+```
+
+We do not find any evidence to suspect p-hacking for either discernment or skepticism bias from visually inspecting p-curves for both outcomes (see Fig. \@ref(fig:p-curve)).
+
+### Data availability
+
+The extracted data used to produce our results are available on the OSF project page (<https://osf.io/96zbp/?view_only=d2f3147f652e44e2a0414d7d6d9a6c29>).
+
+### Code availability
+
+The code used to create all results (including tables and figures) of this manuscript is also available on the OSF project page (<https://osf.io/96zbp/?view_only=d2f3147f652e44e2a0414d7d6d9a6c29>).
+
+### Competing interest
+
+The authors declare having no competing interests.
+
+\FloatBarrier
+
+# References
+
+::: {#refs}
+:::
+
+\newpage
+
+# (APPENDIX) Appendix {.unnumbered}
+
+```{r child = "appendix_a.Rmd"}
+```
+
+\clearpage
+
+```{r child = "appendix_b.Rmd"}
+```
+
+\clearpage
+
+```{r child = "appendix_c.Rmd"}
+```
+
+\clearpage
+
+```{r child = "appendix_d.Rmd"}
+```
+
+\clearpage
+
+```{r child = "appendix_e.Rmd"}
+```
+
+\clearpage
+
+```{r child = "appendix_f.Rmd"}
+```
+
+\clearpage
+
+```{r child = "appendix_g.Rmd"}
+```
+
+\clearpage
+
+```{r child = "appendix_h.Rmd"}
+```
+
+\clearpage
+
+```{r child = "appendix_i.Rmd"}
+```
+
+\clearpage
+
+```{r child = "appendix_j.Rmd"}
+```
+
