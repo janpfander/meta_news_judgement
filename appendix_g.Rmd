@@ -191,15 +191,19 @@ modelsummary::modelsummary(list("Discernment" = garrett_model_accuracy,
                                 "Discernment" = robust_model_accuracy, 
                                 "Skepticism  bias" = robust_model_error),
                            title = 'Model results', 
-                           stars = TRUE, 
+                           #stars = TRUE, 
                            coef_rename = c("overall" = "Estimate (intercept)", 
                                            "intercept" = "Estimate (intercept)",
-                                           "political_concordancediscordant" = "Political Concordance : Discordant (vs. Concordant)")
-                           ) %>%
+                                           "political_concordancediscordant" = "Political Concordance : Discordant (vs. Concordant)"), 
+                           estimate = "{estimate}",
+                           statistic = c("z = {statistic}",
+                                         "p = {p.value}"),
+                           output = "kableExtra"  # Ensure kableExtra is used
+) %>%
   add_header_above(c(" " = 1, "Garrett & Bond, 2021" = 4, "Main results" = 2)) %>%
   # make smaller to fit
   kable_styling(latex_options = "scale_down") %>%
-  footnote(general = "Results from a meta-analysis of the panel study by Garrett & Bond 2021. The results for the moderator analysis for political concordance are based on less observations than the overal analysis, because the latter includes politically neutral headlines and participants who did identify as neither democrat nor republican. For reference, we included the mains results from the meta-analysis (including the study by Garrett and Bond)."
+  footnote(general = "Results from a meta-analysis of the panel study by Garrett & Bond 2021. The results for the moderator analysis for political concordance are based on less observations than the overall analysis, because the latter includes politically neutral headlines and participants who did identify as neither democrat nor republican. For reference, we included the main results from the meta-analysis (including the study by Garrett and Bond). No adjustments have been made."
            , threeparttable = TRUE)
 ```
 

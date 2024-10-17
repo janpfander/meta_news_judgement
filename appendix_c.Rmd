@@ -63,6 +63,7 @@ reduced_accuracy_effect <- reduce_samples(accuracy_effect)
 # for error
 reduced_error_effect <- reduce_samples(error_effect)
 ```
+
 ```{r}
 # a couple of participants with only one observation
 # individual_level_subset %>% 
@@ -189,7 +190,7 @@ reduced_error <- robust(metafor::rma.mv(yi, vi,
          outcome = "error")
 ```
 
-(ref:individual-vs-meta) Comparison of meta to individual level analysis (continuous scales only). "Meta" corresponds to the main results reported in the paper; "meta reduced" are the same meta-analytic models as in the main analysis but run on the subset of studies for which we have individual level data; "individual-level" corresponds to the result of mixed effect models run on the individual-level data. Symbols represent estimates, horizontal bars 95% confidence intervals. 
+(ref:individual-vs-meta) Comparison of meta to individual level analysis (continuous scales only). "Meta" corresponds to the main results reported in the main article, run on all n = `r descriptives$effects` effect sizes; "meta reduced" are the same meta-analytic models as in the main analysis but run on the subset of `r individual_level_continuous$n_papers` articles ($N_{Participants}$ = `r individual_level_continuous$n_subjects`, $N_{Observations}$ = `r individual_level_continuous$n_observations`; making for `r nrow(reduced_accuracy_effect)` effect sizes) for which we have individual level data; "individual-level" corresponds to the result of mixed effect models run on the same subset of individual-level data. Symbols represent model estimates, horizontal bars 95% confidence intervals. 
 
 ```{r individual-vs-meta, fig.cap="(ref:individual-vs-meta)"}
 # We store the results of all analyses in a single data frame

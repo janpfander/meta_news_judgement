@@ -330,8 +330,8 @@ moderator_plots <- function(data, name, common_plot = TRUE) {
       geom_hline(yintercept = 0, 
                  linewidth = 0.5, linetype = "24", color = "grey") +
       # colors 
-      scale_color_viridis_d(option = "turbo", begin = 0.1, end = 0.9) +
-      scale_fill_viridis_d(option = "turbo", begin = 0.1,, end = 0.9) +
+      scale_color_viridis_d(option = "plasma", begin = 0.1, end = 0.9) +
+      scale_fill_viridis_d(option = "plasma", begin = 0.1,, end = 0.9) +
       # labels and scales
       guides(color = "none", fill = "none") +
       labs(x = NULL, y = paste0("Cohen's d (", name, ")")) +
@@ -354,8 +354,7 @@ moderator_plots <- function(data, name, common_plot = TRUE) {
                               ncol = 2, 
                               nrow = 4) %>%
       ggpubr::annotate_figure(top = ggpubr::text_grob(name, face = "bold",
-                                                      color = "red",
-                                                      size = 14))
+                                                      size = 12))
     
     return(plot)
   } else {
@@ -452,13 +451,13 @@ plot_share_true <- function(data, name) {
                linewidth = 0.5, linetype = "24", color = "grey") +
     # Colors 
     scale_color_viridis_d(
-      option = "turbo",
+      option = "plasma",
       begin = 0.1,
       end = 0.9,
       breaks = factor_levels
     ) +
     scale_fill_viridis_d(
-      option = "turbo",
+      option = "plasma",
       begin = 0.1,
       end = 0.9,
       breaks = factor_levels
@@ -503,7 +502,7 @@ plot_share_true_continuous <- function(data, name) {
                linewidth = 0.5, linetype = "24", color = "grey") +
     # Colors 
     scale_color_viridis_d(
-      option = "turbo",
+      option = "plasma",
       begin = 0.1,
       end = 0.9,
       breaks = factor_levels

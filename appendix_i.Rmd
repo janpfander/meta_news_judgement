@@ -1,25 +1,70 @@
 # Included studies {#included-studies}
 
+\FloatBarrier 
+
 ```{r}
-# Literature
+# make overview of included studies and some characteristics
 included <- read_csv("./data/cleaned.csv") %>% 
   # control conditions only
   filter(condition == "control") %>% 
-  group_by(ref) %>% 
-  summarize(reference = unique(reference)) %>% 
+  group_by(country, reference, ref, unique_sample_id) %>% 
+  # make sure to not double count participants from the same sample
+  summarise(participants_per_sample = max(n_subj), 
+            n_effect_sizes_per_sample = n()) %>% 
+  group_by(reference, ref) %>% 
+  # uneven numbers may occur where we didn't have information on how many 
+  # participants in treatment vs. control group and assumed an even split 
+  # (i.e. dividing overall n by number of condition)
+  summarize(participants_per_paper = round(sum(participants_per_sample), digits = 0),
+            n_effect_sizes_per_paper = sum(n_effect_sizes_per_sample), 
+            country = paste(unique(country), collapse = ", ")) %>% 
   ungroup() %>% 
   mutate(id = 1:nrow(.)) %>% 
-  select(id, reference)  
-  
-kbl(included, longtable = T, col.names = NULL) %>%
-  kable_paper(full_width = F,) %>%
-  column_spec(1, bold = T, border_right = T) %>%
-  column_spec(2, width = "30em")
+  select(id, reference, country, n_effect_sizes_per_paper, participants_per_paper) %>% 
+  # give nicer variable names
+  rename('Effect Sizes' = n_effect_sizes_per_paper, 
+         'Participants' = participants_per_paper)
 
-# for an APA standard version, run this:
+# check
+# sum(included$`Effect Sizes`)
+# sum(included$Participants)# different by 1 from descriptives because of rounding
+
 # included %>%
 #   apa_table(note = "Included studies",
-#             align = c("m{0.5cm}", "m{8cm}"), 
+#             align = c("m{0.5cm}", "m{5cm}", "m{2cm}", "m{2cm}", "m{2cm}"),
 #             longtable = TRUE)
+
+kbl(included, longtable = T, 
+    #col.names = NULL, 
+    caption = "Articles included in the meta analysis") %>%
+  kable_paper(full_width = F,) %>%
+  column_spec(1, bold = T, border_right = T) %>%
+  column_spec(2, width = "20em") %>%
+  column_spec(3, width = "7em") %>% 
+  column_spec(4, width = "5em") %>% 
+  column_spec(5, width = "5em") 
 ```
+
+```{r}
+# studies included in the meta analysis 
+
+# @altayIfThisAccount2022 , @altayImpactNewsMedia2022 , @altayExposureHigherRates2023, @arecharUnderstandingCombattingMisinformation2023, @aslettOnlineSearchesEvaluate2024, @badrinathanEducativeInterventionsCombat2021, @bagoFakeNewsFast2020, @bagoEmotionMayPredict2022, @basolPsychologicalHerdImmunity2021, @brashierTimingMattersWhen2021, @bronsteinBeliefFakeNews2019,  @bryanovWhatDrivesPerceptions2023, @chenWhatMakesNews2023, @claytonRealSolutionsFake2020, @diasEmphasizingPublishersDoes2020, @epsteinSocialMediaContext2023, @erlichProKremlinDisinformationEffective2023, @leeHowPoliticalIdentity2023, @faragoHungarianLazyBiased2023, @fazioCombatingMisinformationMegastudy2024, @garrettConservativesSusceptibilityPolitical2021, @gawronskiTruthSensitivityPartisan2023, @gottliebReducingMisinformationPolarized2022, @guessDigitalMediaLiteracy2020, @guessUnbundlingDigitalMedia2024, @hameleersMistakenlyMisinformedIntentionally2023, @clemmvonhohenbergTruthBiasLeft2023, @koetkeFallibilitySalienceIncreases2023, @krepsAssessingMisinformationRecall2023, @luhringEmotionsMisinformationStudies2023, @luoCredibilityPerceptionsDetection2022, @lutzkePrimingCriticalThinking2019, @lyonsReduceBlindSpots2024, @lyonsHealthMediaLiteracy2024, @maertensMisinformationSusceptibilityTest2024, @espinamairalInteractiveCrowdsourcingFactcheck2023, @martelRelianceEmotionPromotes2020, @modirrousta-galianWordlessWisdomDominant2023, @modirrousta-galianEffectsInductiveLearning2023, @mudaPeopleAreWorse2023, @oroszProsocialFakeNews2023, @pehlivanogluRoleAnalyticalReasoning2021, @pennycookPriorExposureIncreases2018, @pennycookLazyNotBiased2019, @pennycookWhoFallsFake2020, @pennycookFightingCOVID19Misinformation2020a, @pennycookPracticalGuideDoing2021, @pereiraInoculationReducesMisinformation2023, @arinAbilityDetectingWillingness2023, @oecdInternationalEffortUsing2022, @rathjeAccuracySocialMotivations2023, @roozenbeekSusceptibilityMisinformationCOVID192020, @roozenbeekSusceptibilityMisinformationConsistent2022, @rosenzweigHappinessSurpriseAre2021, @rossFakeNewsSocial2018,  @rossFakeNewsAnalytic2021, @shirikovFakeNewsAll2024, @smelterPicturesRepeatedExposure2020, @stagnaroIncreasingAccuracyMotivations2023, @winterDontStopBelieving2024  @hlatkyUnintendedConsequencesRussian2024, @altayMediaLiteracyTips2024, @lyonsPartisanshipOlderAmericans2023, @sultanTimePressureReduces2022a
+
+# a list of these can be obtained from running the code below
+
+# library(RefManageR)
+# 
+# # Load the .bib file
+# bib <- ReadBib("references.bib")
+# 
+# # Convert BibTeX to a data frame
+# bib_df <- as.data.frame(bib)
+# 
+# # Select key columns to include in the table
+# bib_table <- bib_df[, c("author", "title", "year")]
+# 
+# # Render the table with kable
+# kable(bib_table, format = "markdown", caption = "List of References")
+```
+
 

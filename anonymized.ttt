@@ -1,0 +1,140 @@
+\begin{longtable}[t]{>{}r||>{\raggedright\arraybackslash}p{20em}|>{\raggedright\arraybackslash}p{7em}|>{\raggedleft\arraybackslash}p{5em}|>{\raggedleft\arraybackslash}p{5em}}
+\caption{\label{tab:unnamed-chunk-125}Articles included in the meta analysis}\\
+\hline
+id & reference & country & Effect Sizes & Participants\\
+\hline
+\textbf{1} & Ali, A., \& Qazi, I. A. (2022). Digital Literacy and Vulnerability to Misinformation: Evidence from Facebook Users in Pakistan. Journal of Quantitative Description: Digital Media, 2. & Pakistan & 1 & 674\\
+\hline
+\textbf{2} & Allen, J., Arechar, A. A., Pennycook, G., \& Rand, D. G. (2021). Scaling up fact-checking using the wisdom of crowds. Science Advances, 7(36), eabf4393. & United States & 1 & 1128\\
+\hline
+\textbf{3} & Altay, S., \& Gilardi, F. (2023). People Are Skeptical of Headlines Labeled as AI-Generated, Even if True or Human-Made, Because They Assume Full AI Automation. OSF. https://doi.org/10.31234/osf.io/83k9r & United States & 1 & 198\\
+\hline
+\textbf{4} & Altay, S., De Angelis, A., \& Hoes, E. (2024). Media literacy tips promoting reliable news improve discernment and enhance trust in traditional media. Communications Psychology, 2(1), 1–9. https://doi.org/10.1038/s44271-024-00121-5 & United States & 3 & 984\\
+\hline
+\textbf{5} & Altay, S., Lyons, B. A., \& Modirrousta-Galian, A. (2024). Exposure to Higher Rates of False News Erodes Media Trust and Fuels Overconfidence. Mass Communication and Society, 1–25. https://doi.org/10.1080/15205436.2024.2382776 & United States & 9 & 2836\\
+\hline
+\textbf{6} & Altay, S., Nielsen, R. K., \& Fletcher, R. (2022). The impact of news media and digital platform use on awareness of and belief in COVID-19 misinformation [Preprint]. PsyArXiv. https://doi.org/10.31234/osf.io/7tm3s & Brazil, India, UK & 9 & 6126\\
+\hline
+\textbf{7} & Altay, S., de Araujo, E., \& Mercier, H. (2022). “If This account is True, It is Most Enormously Wonderful”: Interestingness-If-True and the Sharing of True and False News. Digital Journalism, 10(3), 373–394. https://doi.org/10.1080/21670811.2021.1941163 & United States & 3 & 897\\
+\hline
+\textbf{8} & Arechar, A. A., Allen, J., Berinsky, A. J., Cole, R., Epstein, Z., Garimella, K., Gully, A., Lu, J. G., Ross, R. M., Stagnaro, M. N., Zhang, Y., Pennycook, G., \& Rand, D. G. (2023). Understanding and combatting misinformation across 16 countries on six continents. Nature Human Behaviour, 7(9), 1502–1513. https://doi.org/10.1038/s41562-023-01641-6 & Argentina, Australia, Brazil, China, Egypt, India, Italy, Mexico, Nigeria, Philippines, Russia, Saudi Arabia, South Africa, Spain, UK, United States & 16 & 8371\\
+\hline
+\textbf{9} & Aslett, K., Sanderson, Z., Godel, W., Persily, N., Nagler, J., \& Tucker, J. A. (2024). Online searches to evaluate misinformation can increase its perceived veracity. Nature, 625(7995), 548–556. https://doi.org/10.1038/s41586-023-06883-y & United States & 5 & 7838\\
+\hline
+\textbf{10} & Badrinathan, S. (2021). Educative Interventions to Combat Misinformation: Evidence from a Field Experiment in India. American Political Science Review, 115(4), 1325–1341. https://doi.org/10.1017/S0003055421000459 & India & 2 & 406\\
+\hline
+\textbf{11} & Bago, B., Rand, D. G., \& Pennycook, G. (2020). Fake news, fast and slow: Deliberation reduces belief in false (but not true) news headlines. Journal of Experimental Psychology: General, 149(8), 1608–1613. https://doi.org/10.1037/xge0000729 & United States & 3 & 561\\
+\hline
+\textbf{12} & Bago, B., Rosenzweig, L. R., Berinsky, A. J., \& Rand, D. G. (2022). Emotion may predict susceptibility to fake news but emotion regulation does not seem to help. Cognition and Emotion, 1–15. https://doi.org/10.1080/02699931.2022.2090318 & United States & 8 & 4347\\
+\hline
+\textbf{13} & Basol, M., Roozenbeek, J., Berriche, M., Uenal, F., McClanahan, W. P., \& Linden, S. van der. (2021). Towards psychological herd immunity: Cross-cultural evidence for two prebunking interventions against COVID-19 misinformation. Big Data \& Society, 8(1), 205395172110138. https://doi.org/10.1177/20539517211013868 & Europe/United States, France, Germany, UK & 11 & 3548\\
+\hline
+\textbf{14} & Brashier, N. M., Pennycook, G., Berinsky, A. J., \& Rand, D. G. (2021). Timing matters when correcting fake news. Proceedings of the National Academy of Sciences, 118(5), e2020043118. https://doi.org/10.1073/pnas.2020043118 & United States & 2 & 812\\
+\hline
+\textbf{15} & Bronstein, M. V., Pennycook, G., Bear, A., Rand, D. G., \& Cannon, T. D. (2019). Belief in Fake News is Associated with Delusionality, Dogmatism, Religious Fundamentalism, and Reduced Analytic Thinking. Journal of Applied Research in Memory and Cognition, 8(1), 108–117. https://doi.org/10.1016/j.jarmac.2018.09.005 & United States & 2 & 948\\
+\hline
+\textbf{16} & Chen, X., Pennycook, G., \& Rand, D. (2023). What Makes News Sharable on Social Media? Journal of Quantitative Description: Digital Media, 3. https://doi.org/10.51685/jqd.2023.007 & United States & 2 & 5000\\
+\hline
+\textbf{17} & Clayton, K., Blair, S., Busam, J. A., Forstner, S., Glance, J., Green, G., Kawata, A., Kovvuri, A., Martin, J., Morgan, E., Sandhu, M., Sang, R., Scholz-Bright, R., Welch, A. T., Wolff, A. G., Zhou, A., \& Nyhan, B. (2020). Real Solutions for Fake News? Measuring the Effectiveness of General Warnings and Fact-Check Tags in Reducing Belief in False Stories on Social Media. Political Behavior, 42(4), 1073–1095. https://doi.org/10.1007/s11109-019-09533-0 & United States & 1 & 469\\
+\hline
+\textbf{18} & Clemm von Hohenberg, B. (2023). Truth and Bias, Left and Right: Testing Ideological Asymmetries with a Realistic News Supply. Public Opinion Quarterly, nfad013. & United States & 1 & 1393\\
+\hline
+\textbf{19} & Dias, N., Pennycook, G., \& Rand, D. G. (2020). Emphasizing publishers does not effectively reduce susceptibility to misinformation on social media. Harvard Kennedy School Misinformation Review. https://doi.org/10.37016/mr-2020-001 & United States & 3 & 1297\\
+\hline
+\textbf{20} & Epstein, Z., Sirlin, N., Arechar, A., Pennycook, G., \& Rand, D. (2023). The social media context interferes with truth discernment. Science Advances, 9(9), eabo6169. https://doi.org/10.1126/sciadv.abo6169 & United States & 8 & 1532\\
+\hline
+\textbf{21} & Erlich, A., \& Garner, C. (2023). Is pro-Kremlin Disinformation Effective? Evidence from Ukraine. The International Journal of Press/Politics, 28(1), 5–28. https://doi.org/10.1177/19401612211045221 & Ukraine & 8 & 11448\\
+\hline
+\textbf{22} & Espina Mairal, S., Bustos, F., Solovey, G., \& Navajas, J. (2023). Interactive crowdsourcing to fact-check politicians. Journal of Experimental Psychology: Applied. https://doi.org/10.1037/xap0000492 & Argentina & 4 & 420\\
+\hline
+\textbf{23} & Eun-Ju Lee \& Jeong-woo Jang (2023): How Political Identity and Misinformation Priming Affect Truth Judgments and Sharing Intention of Partisan News, Digital Journalism, DOI: 10.1080/21670811.2022.2163413 & South Korea & 8 & 328\\
+\hline
+\textbf{24} & Faragó, L., Krekó, P., \& Orosz, G. (2023). Hungarian, lazy, and biased: The role of analytic thinking and partisanship in fake news discernment on a Hungarian representative sample. Scientific Reports, 13(1), 178. https://doi.org/10.1038/s41598-022-26724-8 & Hungary & 3 & 991\\
+\hline
+\textbf{25} & Fazio, L., Rand, D., Lewandowsky, S., Susmann, M., Berinsky, A. J., Guess, A., Kendeou, P., Lyons, B., Miller, J., Newman, E., Pennycook, G., \& Swire-Thompson, B. (2024). Combating misinformation: A megastudy of nine interventions designed to reduce the sharing of and belief in false and misleading headlines. OSF. https://doi.org/10.31234/osf.io/uyjha & United States & 2 & 1617\\
+\hline
+\textbf{26} & Garrett, R. K., \& Bond, R. M. (2021). Conservatives’ susceptibility to political misperceptions. Science Advances, 7(23), eabf1234. https://doi.org/10.1126/sciadv.abf1234 & United States & 47 & 1204\\
+\hline
+\textbf{27} & Gawronski, B., Ng, N. L., \& Luke, D. M. (2023). Truth sensitivity and partisan bias in responses to misinformation. Journal of Experimental Psychology: General, 152(8), 2205–2236. https://doi.org/10.1037/xge0001381 & United States & 4 & 481\\
+\hline
+\textbf{28} & Gottlieb, J., Adida, C., \& Moussa, R. (2022). Reducing Misinformation in a Polarized Context: Experimental Evidence from Côte d’Ivoire. OSF Preprints. https://doi.org/10.31219/osf.io/6x4wy & Ivory Coast & 2 & 1160\\
+\hline
+\textbf{29} & Guess, A. M., Lerner, M., Lyons, B., Montgomery, J. M., Nyhan, B., Reifler, J., \& Sircar, N. (2020). A digital media literacy intervention increases discernment between mainstream and false news in the United States and India. Proceedings of the National Academy of Sciences, 117(27), 15536–15545. https://doi.org/10.1073/pnas.1920498117 & India & 4 & 3508\\
+\hline
+\textbf{30} & Guess, A., McGregor, S., Pennycook, G., \& Rand, D. (2024). Unbundling Digital Media Literacy Tips: Results from Two Experiments. OSF. https://doi.org/10.31234/osf.io/u34fp & United States & 9 & 1088\\
+\hline
+\textbf{31} & Hameleers, M., Tulin, M., De Vreese, C., Aalberg, T., Van Aelst, P., Cardenal, A. S., Corbu, N., Van Erkel, P., Esser, F., Gehle, L., Halagiera, D., Hopmann, D., Koc‐Michalska, K., Matthes, J., Meltzer, C., Mihelj, S., Schemer, C., Sheafer, T., Splendore, S., … Zoizner, A. (2023). Mistakenly misinformed or intentionally deceived? Mis‐ and Disinformation perceptions on the Russian War in Ukraine among citizens in 19 countries. European Journal of Political Research, 1475-6765.12646. https://doi.org/10.1111/1475-6765.12646 & Austria, Belgium, Brazil, Czech Republic, Denmark, France, Germany, Great Britain, Greece, Hungary, Italy, Netherlands, Poland, Romania, Serbia, Spain, Sweden, Switzerland, United States & 19 & 19037\\
+\hline
+\textbf{32} & Hlatky, R. (2024). Unintended Consequences? Russian Disinformation and Public Opinion. OSF. https://doi.org/10.31219/osf.io/85vmt & Slovakia & 2 & 961\\
+\hline
+\textbf{33} & Kirill Bryanov, Reinhold Kliegl, Olessia Koltsova, Tetyana Lokot, Alex Miltsov, Sergei Pashakhin, Alexander Porshnev, Yadviga Sinyavskaya, Maksim Terpilovskii \& Victoria Vziatysheva (2023) What Drives Perceptions of Foreign News Coverage Credibility? A Cross- National Experiment Including Kazakhstan, Russia, and Ukraine, Political Communication, 40:2, 115-146, DOI: 10.1080/10584609.2023.2172492 & Kazakhstan, Russia, Ukraine & 5 & 8559\\
+\hline
+\textbf{34} & Koetke, J., Schumann, K., Porter, T., \& Smilo-Morgan, I. (2023). Fallibility Salience Increases Intellectual Humility: Implications for People’s Willingness to Investigate Political Misinformation. Personality and Social Psychology Bulletin, 49(5), 806–820. https://doi.org/10.1177/01461672221080979 & United States & 1 & 289\\
+\hline
+\textbf{35} & Kreps, S. E., \& Kriner, D. L. (2023). Assessing misinformation recall and accuracy perceptions: Evidence from the COVID-19 pandemic. Harvard Kennedy School Misinformation Review. https://doi.org/10.37016/mr-2020-123 & United States & 1 & 1045\\
+\hline
+\textbf{36} & Luo, M., Hancock, J. T., \& Markowitz, D. M. (2022). Credibility Perceptions and Detection Accuracy of Fake News Headlines on Social Media: Effects of Truth-Bias and Endorsement Cues. Communication Research, 49(2), 171–195. https://doi.org/10.1177/0093650220921321 & United States & 3 & 337\\
+\hline
+\textbf{37} & Lutzke, L., Drummond, C., Slovic, P., \& Árvai, J. (2019). Priming critical thinking: Simple interventions limit the influence of fake news about climate change on Facebook. Global Environmental Change, 58, 101964. https://doi.org/10.1016/j.gloenvcha.2019.101964 & United States & 1 & 934\\
+\hline
+\textbf{38} & Lyons, B., King, A. J., \& Kaphingst, K. (2024). A health media literacy intervention increases skepticism of both inaccurate and accurate cancer news among U.S. adults. https://doi.org/10.31219/osf.io/hm9ty & United States & 1 & 195\\
+\hline
+\textbf{39} & Lyons, B., Modirrousta-Galian, A., Altay, S., \& Salovich, N. A. (2024). Reduce blind spots to improve news discernment? Performance feedback reduces overconfidence but does not improve subsequent discernment. https://doi.org/10.31219/osf.io/kgfrb & United States & 12 & 2194\\
+\hline
+\textbf{40} & Lyons, B., Montgomery, J., \& Reifler, J. (2023). Partisanship and older Americans’ engagement with dubious political news. OSF. https://doi.org/10.31219/osf.io/etb89 & United States & 2 & 2454\\
+\hline
+\textbf{41} & Lühring, J., Shetty, A., Koschmieder, C., Garcia, D., Waldherr, A., \& Metzler, H. (2023). Emotions in misinformation studies: Distinguishing affective state from emotional response and misinformation recognition from acceptance. PsyArXiv. https://doi.org/10.31234/osf.io/udqms & Austria & 1 & 422\\
+\hline
+\textbf{42} & Maertens, R., Götz, F. M., Schneider, C. R., Roozenbeek, J., Kerr, J. R., Stieger, S., McClanahan, W. P., Drabot, K., \& Linden, S. van der. (2021). The Misinformation Susceptibility Test (MIST): A psychometrically validated measure of news veracity discernment [Preprint]. PsyArXiv. https://doi.org/10.31234/osf.io/gk68h & UK, United States & 2 & 6461\\
+\hline
+\textbf{43} & Martel, C., Pennycook, G., \& Rand, D. G. (2020). Reliance on emotion promotes belief in fake news. Cognitive Research: Principles and Implications, 5(1), 47. https://doi.org/10.1186/s41235-020-00252-3 & United States & 2 & 1704\\
+\hline
+\textbf{44} & Modirrousta-Galian, A., Higham, P. A., \& Seabrooke, T. (2023). Effects of inductive learning and gamification on news veracity discernment. Journal of Experimental Psychology: Applied, 29(3), 599–619. https://doi.org/10.1037/xap0000458 & United States & 1 & 72\\
+\hline
+\textbf{45} & Modirrousta-Galian, A., Higham, P. A., \& Seabrooke, T. (2024). Wordless wisdom: The dominant role of tacit knowledge in true and fake news discrimination. Journal of Applied Research in Memory and Cognition. & United States & 1 & 327\\
+\hline
+\textbf{46} & Muda, R., Pennycook, G., Hamerski, D., \& Białek, M. (2023). People are worse at detecting fake news in their foreign language. Journal of Experimental Psychology: Applied, 29(4), 712–724. https://doi.org/10.1037/xap0000475 & Poland & 2 & 318\\
+\hline
+\textbf{47} & OECD. (2022). An international effort using behavioural science to tackle the spread of misinformation (OECD Public Governance Policy Papers 21; OECD Public Governance Policy Papers, Vol. 21). https://doi.org/10.1787/b7709d4f-en & Canada & 1 & 282\\
+\hline
+\textbf{48} & Orosz, G., Paskuj, B., Faragó, L., \& Krekó, P. (2023). A prosocial fake news intervention with durable effects. Scientific Reports, 13(1), 3958. https://doi.org/10.1038/s41598-023-30867-7 & Hungary & 2 & 412\\
+\hline
+\textbf{49} & Pehlivanoglu, D., Lin, T., Deceus, F., Heemskerk, A., Ebner, N. C., \& Cahill, B. S. (2021). The role of analytical reasoning and source credibility on the evaluation of real and fake full-length news articles. Cognitive Research: Principles and Implications, 6(1), 24. https://doi.org/10.1186/s41235-021-00292-3 & United States & 4 & 649\\
+\hline
+\textbf{50} & Pennycook, G., \& Rand, D. G. (2019). Lazy, not biased: Susceptibility to partisan fake news is better explained by lack of reasoning than by motivated reasoning. Cognition, 188, 39–50. https://doi.org/10.1016/j.cognition.2018.06.011 & United States & 1 & 2644\\
+\hline
+\textbf{51} & Pennycook, G., \& Rand, D. G. (2020). Who falls for fake news? The roles of bullshit receptivity, overclaiming, familiarity, and analytic thinking. Journal of Personality, 88(2), 185–200. https://doi.org/10.1111/jopy.12476 & United States & 2 & 1204\\
+\hline
+\textbf{52} & Pennycook, G., Binnendyk, J., Newton, C., \& Rand, D. G. (2021). A Practical Guide to Doing Behavioral Research on Fake News and Misinformation. Collabra: Psychology, 7(1), 25293. https://doi.org/10.1525/collabra.25293 & United States & 2 & 2013\\
+\hline
+\textbf{53} & Pennycook, G., Cannon, T. D., \& Rand, D. G. (2018). Prior exposure increases perceived accuracy of fake news. Journal of Experimental Psychology: General, 147(12), 1865–1880. https://doi.org/10.1037/xge0000465 & United States & 2 & 474\\
+\hline
+\textbf{54} & Pennycook, G., McPhetres, J., Zhang, Y., Lu, J. G., \& Rand, D. G. (2020). Fighting COVID-19 Misinformation on Social Media: Experimental Evidence for a Scalable Accuracy-Nudge Intervention. 11. & United States & 1 & 426\\
+\hline
+\textbf{55} & Pereira, F. B., Bueno, N. S., Nunes, F., \& Pavão, N. (2023). Inoculation Reduces Misinformation: Experimental Evidence from Multidimensional Interventions in Brazil. Journal of Experimental Political Science, 1–12. https://doi.org/10.1017/XPS.2023.11 & Brazil & 3 & 1037\\
+\hline
+\textbf{56} & Peren Arin, K., Mazrekaj, D., \& Thum, M. (2023). Ability of detecting and willingness to share fake news. Scientific Reports, 13(1), 7298. & Germany, UK & 2 & 2379\\
+\hline
+\textbf{57} & Rathje, S., Roozenbeek, J., Van Bavel, J.J. et al. Accuracy and social motivations shape judgements of (mis)information. Nat Hum Behav (2023). https://doi.org/10.1038/s41562-023-01540-w & United States & 10 & 1303\\
+\hline
+\textbf{58} & Roozenbeek, J., Maertens, R., Herzog, S. M., Geers, M., Kurvers, R., \& Sultan, M. (2022). Susceptibility to misinformation is consistent across question framings and response modes and better explained by myside bias and partisanship than analytical thinking. Judgment and Decision Making, 17(3), 27. & United States & 8 & 2622\\
+\hline
+\textbf{59} & Roozenbeek, J., Schneider, C. R., Dryhurst, S., Kerr, J., Freeman, A. L. J., Recchia, G., van der Bles, A. M., \& van der Linden, S. (2020). Susceptibility to misinformation about COVID-19 around the world. Royal Society Open Science, 7(10), 201199. https://doi.org/10.1098/rsos.201199 & Ireland, Mexico, Spain, UK, United States & 6 & 5000\\
+\hline
+\textbf{60} & Rosenzweig, L. R., Bago, B., Berinsky, A. J., \& Rand, D. G. (2021). Happiness and surprise are associated with worse truth discernment of COVID-19 headlines among social media users in Nigeria. Harvard Kennedy School Misinformation Review. https://doi.org/10.37016/mr-2020-75 & Nigeria & 1 & 1341\\
+\hline
+\textbf{61} & Ross, B., Heisel, J., Jung, A.-K., \& Stieglitz, S. (2018). Fake News on Social Media: The (In)Effectiveness of Warning Messages. & Germany & 1 & 53\\
+\hline
+\textbf{62} & Ross, R. M., Rand, D. G., \& Pennycook, G. (2021). Beyond “fake news”: Analytic thinking and the detection of false and hyperpartisan news headlines. Judgment and Decision Making, 16(2), 22. & United States & 2 & 940\\
+\hline
+\textbf{63} & Shirikov, A. (2024). Fake News for All: How Citizens Discern Disinformation in Autocracies. Political Communication, 41(1), 45–65. https://doi.org/10.1080/10584609.2023.2257618 & Russia & 8 & 51764\\
+\hline
+\textbf{64} & Smelter, T. J., \& Calvillo, D. P. (2020). Pictures and repeated exposure increase perceived accuracy of news headlines. Applied Cognitive Psychology, 34(5), 1061–1071. https://doi.org/10.1002/acp.3684 & United States & 5 & 594\\
+\hline
+\textbf{65} & Stagnaro, M., Pink, S., Rand, D. G., \& Willer, R. (2023). Increasing accuracy motivations using moral reframing does not reduce Republicans’ belief in false news. Harvard Kennedy School Misinformation Review. https://doi.org/10.37016/mr-2020-128 & United States & 1 & 1007\\
+\hline
+\textbf{66} & Sultan, M., Tump, A. N., Geers, M., Lorenz-Spreen, P., Herzog, S. M., \& Kurvers, R. H. J. M. (2022). Time pressure reduces misinformation discrimination ability but does not alter response bias. Scientific Reports, 12(1), 22416. https://doi.org/10.1038/s41598-022-26209-8 & United States & 2 & 382\\
+\hline
+\textbf{67} & Winter, S., Valenzuela, S., Santos, M., Schreyer, T., Iwertowski, L., \& Rothmund, T. (2024). (Don’t) Stop Believing: A Signal Detection Approach to Risk and Protective Factors for Engagement with Politicized (Mis)Information in Social Media. & Germany & 1 & 992\\
+\hline
+\end{longtable}

@@ -23,7 +23,7 @@ accuracy_effect <- add_binary_continuous_scales(accuracy_effect)
 error_effect <- add_binary_continuous_scales(error_effect)
 ```
 
-(ref:binary-continuous-descriptive) Distribution of effect sizes (Cohen's d) grouped by whether a binary or continuous response scale was used.
+(ref:binary-continuous-descriptive) Distribution of effect sizes (Cohen's d) grouped by whether a binary or continuous (Likert-scale type) response scale was used.
 
 ```{r binary-continuous-descriptive, fig.cap="(ref:binary-continuous-descriptive)"}
 data <- bind_rows(accuracy_effect %>% mutate(outcome = "accuracy"), 
@@ -45,7 +45,8 @@ ggplot(data,
     scale_color_viridis_d(option = "plasma", end = 0.9)+
     scale_fill_viridis_d(option = "plasma", end = 0.9) +
     # labels and scales
-    labs(x = NULL, y = "Cohen's d", fill = NULL) +
+    labs(x = NULL, y = "Cohen's d", fill = NULL, 
+         title = "Binary vs. Likert Scales") +
   guides(color = FALSE, fill = FALSE) +
     plot_theme +
     coord_flip() +
@@ -72,7 +73,7 @@ scale_comparison_meta_regression <- function (data, return_as = "model") {
   
   if(return_as == "tidy") {
     
-    model %>% 
+    model <- model %>% 
       tidy(conf.int = TRUE) %>% 
       mutate(model = "Original SMDs (all data)") %>% 
       # give a nicer name to the estimate
@@ -80,14 +81,14 @@ scale_comparison_meta_regression <- function (data, return_as = "model") {
                            "effect of continuous scale (baseline binary)", term)
       )
     
-    return(tidy) 
+    return(model) 
   }
 }
 
 # calculate the model for accuracy
-scales_comparison_all_data_accuracy <- scale_comparison_meta_regression(accuracy_effect, return_as = "tidy")
-# for error
-scales_comparison_all_data_error <- scale_comparison_meta_regression(error_effect, return_as = "tidy")
+# scales_comparison_all_data_accuracy <- scale_comparison_meta_regression(accuracy_effect, return_as = "tidy")
+# # for error
+# scales_comparison_all_data_error <- scale_comparison_meta_regression(error_effect, return_as = "tidy")
 
 # discernment
 scales_comparison_discernment <- scale_comparison_meta_regression(accuracy_effect)
@@ -100,15 +101,21 @@ scales_comparison_bias <- scale_comparison_meta_regression(error_effect)
 # main result table
 modelsummary::modelsummary(list("Discernment" = scales_comparison_discernment, 
                                 "Skepticism  bias" = scales_comparison_bias),
-                           title = 'Model results', 
-                           stars = TRUE, 
-                           coef_rename = c("scale_binary_continuouscontinuous" = "Continuous (vs. binary)")
-                           )
+                           title = 'Binary vs. Likert Scales', 
+                           #stars = TRUE, 
+                           coef_rename = c("scale_binary_continuouscontinuous" = "Continuous (vs. binary)"), 
+                           estimate = "{estimate}",
+                           statistic = c("z = {statistic}",
+                                         "p = {p.value}"),
+                           output = "kableExtra"  # Ensure kableExtra is used
+                           ) %>%
+  footnote(general = "Results of a meta-regression using scale type (two levels: binary vs. continuous) as the moderator variable. No adjustements have been made."
+           , threeparttable = TRUE)
 ```
 
 ## Dichotomizing likert scale responses
 
-To investigate the effect of scale type, we run a test on a subset of studies that we have individual-level data on and that used Likert scales. For this subset, we made two versions: (i) a version with the original Likert scale scores; (ii) a dichotomized version where we collapsed the Likert scale scores into either 'false' or 'true'. For example, on a 4-point scale, we coded responses of 1 and 2 as not accurate (0) and 3 and 4 as accurate(1). For scales, with a mid-point (example 3 on a 5-point scale), we coded midpoint answers as 'NA'. 
+To further investigate the effect of scale type, we run a test on a subset of studies that we have individual-level data on and that used Likert scales. For this subset, we made two versions: (i) a version with the original Likert scale scores; (ii) a dichotomized version where we collapsed the Likert scale scores into either 'false' or 'true'. For example, on a 4-point scale, we coded responses of 1 and 2 as not accurate (0) and 3 and 4 as accurate(1). For scales, with a mid-point (example 3 on a 5-point scale), we coded midpoint answers as 'NA'. 
 
 We calculate the summary statistics for both versions and run the same meta-analytic models on that subset. Table \@ref(tab:table-individual-dichotomized) summarizes the results. 
 
@@ -277,17 +284,24 @@ modelsummary::modelsummary(list("Discernment" = likert_accuracy_model,
                                 "Skepticism  bias" = likert_error_model,
                                 "Discernment" = binary_accuracy_model, 
                                 "Skepticism  bias" = binary_error_model),
-                           title = 'Model results', 
-                           stars = TRUE, 
-                           coef_rename = c("overall" = "Estimate")
+                           title = "Original Likert-scale vs. dichotomized version", 
+                           #stars = TRUE, 
+                           coef_rename = c("overall" = "Estimate"), 
+                           estimate = "{estimate}",
+                           statistic = c("z = {statistic}",
+                                         "p = {p.value}"),
+                           output = "kableExtra"  # Ensure kableExtra is used
                            ) %>%
   add_header_above(c(" " = 1, "Original Likert scale" = 2, "Dichotomized" = 2)) %>%
   # make smaller to fit
-  kable_styling(latex_options = "scale_down") 
-# %>%
-#   footnote(general = ""
-#            , threeparttable = TRUE)
+  kable_styling(latex_options = "scale_down") %>%
+  footnote(general = "Meta-analyses following the modeles of the main paper, on the subset of studies that we have individual-level data on and that used Likert scales. For this subset, we made two versions: (i) a version with the original Likert scale scores; (ii) a dichotomized version where we collapsed the Likert scale scores into either 'false' or 'true'. For example, on a 4-point scale, we coded responses of 1 and 2 as not accurate (0) and 3 and 4 as accurate(1). For scales, with a mid-point (example 3 on a 5-point scale), we coded midpoint answers as 'NA'. No adjustments have been made."
+           , threeparttable = TRUE)
+
+
 ```
+
+
 
 
 ## Binary response scales
@@ -578,8 +592,12 @@ model_OR_error <- comparison_binary[[2]]
 
 modelsummary::modelsummary(comparison_binary,
                            title = 'Individual-level studies with binary response scale', 
-                           stars = TRUE, 
-                           coef_rename = c("overall" = "Estimate")
+                           #stars = TRUE, 
+                           coef_rename = c("overall" = "Estimate"), 
+                           estimate = "{estimate}",
+                           statistic = c("z = {statistic}",
+                                         "p = {p.value}"),
+                           output = "kableExtra"  # Ensure kableExtra is used
 ) %>% 
   add_header_above(c(" " = 1,
                      "Log OR" = 2,
@@ -588,7 +606,7 @@ modelsummary::modelsummary(comparison_binary,
                    ) %>%
   add_header_above(c(" " = 1, "(based on individual data)" = 2, "(based on meta data)"= 4),
                    line = FALSE, italic = TRUE) %>%
-  footnote(general = "Note that the number of observations differ, because some samples provide several effect sizes in the meta-data. For the odds ratios based on the individual data, however, we calculated only one average effect size per sample. The samples are only from studies with binary response scales that we had raw, individual-level data on.",
+  footnote(general = "Results of a meta-analyses using different effect-size estimators, on the subset of studies that we have individual-level data on and that use binary response scales.  Note that the number of observations differ, because some samples provide several effect sizes in the meta-data. For the odds ratios based on the individual data, however, we calculated only one average effect size per sample. No adjustments have been made.",
            threeparttable = TRUE) %>%
   # make smaller to fit
   kable_styling(latex_options = "scale_down")
@@ -623,16 +641,20 @@ modelsummary::modelsummary(list(
   "Skepticism bias" = binary_error_model
   
 ),
-                           title = 'Individual-level studies with binary response scales and Likert scale ratings collapsed to binary outcome', 
-                           stars = TRUE, 
-                           coef_rename = c("overall" = "Estimate"),
-                           escape = TRUE
+title = 'Individual-level studies with binary response scales and Likert scale ratings collapsed to binary responses', 
+#stars = TRUE, 
+coef_rename = c("overall" = "Estimate"),
+escape = TRUE, 
+estimate = "{estimate}",
+statistic = c("z = {statistic}",
+              "p = {p.value}"),
+output = "kableExtra"  # Ensure kableExtra is used
 ) %>% 
   add_header_above(c(" " = 1,
                      "Log OR" = 2,
                      "Cohen's d" = 2),
-                   ) %>%
-  footnote(general = "Note that the number of observations differ, because some samples provide several effect sizes in the meta-data. For the odds ratios based on the individual data, however, we calculated only one average effect size per sample. The sample consists of all studies we had individual-level data on. For individual-level studies with continuous response scales, we computed the odds ratio after collapsing responses to a binary outcome.", threeparttable = TRUE) %>%
+  ) %>%
+  footnote(general = "An extension to the previous table, where in addition to the studies that used a binary response scale, we added a dichotomized response version for studies that used Likert scales.", threeparttable = TRUE) %>%
   # make smaller to fit
   kable_styling(latex_options = "scale_down")
 ```

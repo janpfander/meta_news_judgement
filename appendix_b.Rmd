@@ -10,7 +10,7 @@ Table \@ref(tab:moderators-discernment-table) shows the results of the different
 # display models
 modelsummary::modelsummary(moderator_models_accuracy,
                            title = 'Moderator effects on Discernment',
-                           stars = TRUE,
+                           #stars = TRUE,
                            coef_rename = c("country_groupedUS" = "Country: US (vs. nonUS)",
                                            "political_concordancediscordant" = "Political Concordance : Discordant (vs. Concordant)",
                                            "news_family_groupedother" = "News family: Other (vs. Covid)",
@@ -24,17 +24,23 @@ modelsummary::modelsummary(moderator_models_accuracy,
                                            "accuracy_scale_groupedother" = "Accuracy Scale: other (vs. 4)",
                                            "perfect_symetryTRUE" = "Symmetrie: perfect (vs. imperfect)",
                                            "selection_fake_news_groupedidentified by researchers" = "False news: verified by researchers (vs. taken from fact check sites)"
-                                           )
+                                           ), 
+                           estimate = "{estimate}",
+                           statistic = c("z = {statistic}",
+                                         "p = {p.value}"),
+                           output = "kableExtra"  # Ensure kableExtra is used
                            ) %>%
   # make smaller to fit
-  kable_styling(latex_options = "scale_down")
+  kable_styling(latex_options = "scale_down") %>%
+  footnote(general = "Results of meta-regressions for different moderator variables. No adjustements have been made."
+           , threeparttable = TRUE)
 ```
 
 ```{r moderators-bias-table}
 # display models
 modelsummary::modelsummary(moderator_models_error,
                            title = 'Moderator effects on Skepticism  bias',
-                           stars = TRUE,
+                           #stars = TRUE,
                            coef_rename = c("country_groupedUS" = "Country: US (vs. nonUS)",
                                            "political_concordancediscordant" = "Political Concordance : Discordant (vs. Concordant)",
                                            "news_family_groupedother" = "News family: Other (vs. Covid)",
@@ -48,19 +54,25 @@ modelsummary::modelsummary(moderator_models_error,
                                            "accuracy_scale_groupedother" = "Accuracy Scale: other (vs. 4)",
                                            "perfect_symetryTRUE" = "Symmetrie: perfect (vs. imperfect)",
                                            "selection_fake_news_groupedidentified by researchers" = "False news: verified by researchers (vs. taken from fact check sites)"
-                                           )
+                                           ), 
+                           estimate = "{estimate}",
+                           statistic = c("z = {statistic}",
+                                         "p = {p.value}"),
+                           output = "kableExtra"  # Ensure kableExtra is used
                            ) %>%
   # make smaller to fit
-  kable_styling(latex_options = "scale_down")
+  kable_styling(latex_options = "scale_down") %>%
+  footnote(general = "Results of meta-regressions for different moderator variables. No adjustements have been made."
+           , threeparttable = TRUE)
 ```
 
-(ref:moderators-discernment) Distribution of effect sizes for discernment by moderator variables.
+(ref:moderators-discernment) *Moderator effects on discernment*. The figure shows the distribution of effect sizes for discernment by moderator variables.
 
 ```{r moderators-discernment, fig.height= 10, fig.cap="(ref:moderators-discernment)"}
 moderator_plots(accuracy_effect, "Discernment")
 ```
 
-(ref:moderators-bias) Distribution of effect sizes for skepticism bias by moderator variables.
+(ref:moderators-bias) *Moderator effects on skepticism bias*. The figure shows the distribution of effect sizes for skepticism bias by moderator variables.
 
 ```{r moderators-bias, fig.height= 10, fig.cap="(ref:moderators-bias)"}
 moderator_plots(error_effect, "Skepticism  bias")
@@ -86,7 +98,7 @@ meta_wide %>% group_by(perfect_symetry) %>% summarise(Papers = n_distinct(paperI
   pivot_wider(names_from = perfect_symetry, 
               values_from = frequency) %>% 
   column_to_rownames(var = "variable") %>% 
-  apa_table(note = "Frequency table of scales.")
+  apa_table(caption = "Frequency table of scales")
 ```
 
 Perfectly symmetrical scales include all binary scales (e.g. "True" or "False", "Real" or "Fake", is accurate "Yes" or "No", is accurate and unbiased "Yes" or "No"), and most Likert-scales (1 to 7: "Definitely fake" [1] to "Definitely real" [7], "Very unreliable" [1] to "Very reliable" [7], "Extremely unlikely" [1] to "Extremely likely" [7], "Extremely unbelievable" [1] to "Extremely believable" [7]; 1 to 6: "Extremely inaccurate" [1] to "Extremely accurate" [6], "Completely false" [1] to "Completely true" [6]). Yet, we coded the most common scale, a 4-point Likert scale ([1] not at all accurate, [2] not very accurate, [3] somewhat accurate, [4] very accurate), as not perfectly symmetrical. We coded two other Likert scales as not perfectly symmetrical ("not at all trustworthy" [1] to "very trustworthy" [10]; "not at all" [1] to "very" [7]).
@@ -99,7 +111,7 @@ The results suggest that imperfectly symmetrical scales may inflate discernment.
 
 Most studies exposed participants to 50% of false news and 50% of true news, whereas outside of experimental settings, people on average are exposed to much more true news than false news [@altayQuantifyingInfodemicPeople2022]. This inflated proportion of false news may increase discernment or make participants more skeptical of true news. Empirical evidence suggests that the ratio of false news has no effect on discernment and slightly increases skepticism in news judgment [@altayExposureHigherRates2023]. Figure \@ref(fig:share-true) shows effect sizes for discernment and skepticism bias as a function of news ratio. Due to the very uneven number of effect sizes, it does not seem reasonable to run a meta-regression to test this. However, Fig. \@ref(fig:share-true) suggests no obvious trend with regard to the share of true news ratio. Besides, as for the other moderator variables, any observed association is likely to be confounded by other factors.
 
-(ref:share-true) Effect sizes plotted by their share of true news among all news that an individual participant saw.
+(ref:share-true) *Effects of true-false ratio*. Effect sizes plotted by their share of true news among all news that an individual participant saw.
 
 ```{r share-true, fig.cap="(ref:share-true)"}
 # for a plot with share as a factor variable, run this:

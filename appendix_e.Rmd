@@ -18,9 +18,14 @@ bias <- error_effect %>%
 modelsummary::modelsummary(list("Discernment" = discernment, 
                                 "Skepticism  bias" = bias),
                            title = 'Egger\'s regression', 
-                           stars = TRUE, 
-                           coef_rename = c("x" = "Inverse SE")
-                           )
+                           #stars = TRUE, 
+                           coef_rename = c("x" = "Inverse SE"), 
+                           estimate = "{estimate}",
+                           statistic = c("z = {statistic}",
+                                         "p = {p.value}"),
+                           output = "kableExtra"  # Ensure kableExtra is used
+                           ) %>%
+  footnote(general = "Results of Egger's regression test. No adjustments have been made.", threeparttable = TRUE)
 
 ```
 

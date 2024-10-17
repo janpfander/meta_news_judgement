@@ -1,0 +1,56 @@
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+\centering
+\includegraphics{output/figures/map.pdf}
+\caption{\label{fig:map}A map of the number of effect sizes per country.}
+\end{figure*}
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+\centering
+\includegraphics{output/figures/descriptive.pdf}
+\caption{\label{fig:descriptive}\emph{Illustration of outcome measures}. The figure shows the distributions of accuracy ratings for true and fact-checked false news, scaled to range from 0 to 1. The figure illustrates discernment (the distance between the mean for true news and the mean for false news) and the errors (distance to the right end for true news and to the left end for false news) from which the skepticism bias is computed. A larger error for true news compared to false news yields a positive skepticism bias. In this descriptive figure, unlike in the meta-analysis, ratings and effect sizes are not weighted by sample size.}
+\end{figure*}
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+\centering
+\includegraphics{output/figures/forest.pdf}
+\caption{\label{fig:forest}\emph{Forest plots for discernment and skepticism bias}. The figure displays all n = 303 effect sizes for both outcomes. Effects are weighed by their sample size. Effect sizes are calculated as Cohen's d.~Horizontal bars represent 95\% confidence intervals. The average estimate is the result of a multilevel meta model with clustered standard errors at the sample level.}
+\end{figure*}
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+\centering
+\includegraphics{output/figures/concordance.pdf}
+\caption{\label{fig:concordance}\emph{Effect of political concordance on discernment and skepticism bias}. The figure shows the distribution of the n = 44 effect sizes for politically concordant and discordant items. The black dots represent the predicted average of the meta-regression, the black horizontal bars the 95\% confidence intervals. Note that the figure does not represent the different weights (i.e.~the varying sample sizes) of the data points, but that these weights are taken into account in the meta-regression.}
+\end{figure*}
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+\centering
+\includegraphics{output/figures/individual-level-plot.pdf}
+\caption{\label{fig:individual-level-plot}\emph{Outcomes on the participant-level}. The figure shows the distribution of average discernment and skepticism bias scores of individual participants in the subset of studies that we have raw data on. We standardized original accuracy ratings to range from 0 to 1, to be able to compare across scales. Therefore, the worst possible score is -1 where, for discernment, an individual classified all news wrongly, and for skepticism bias, an individual classified all true news correctly (as true) and all false news incorrectly (as true). The best possible score is 1 where, for discernment, an individual classified all news correctly, and for skepticism bias, an individual classified all true news incorrectly (as false) and all false news correctly (as false). The percentage labels (from left to right) represent the share of participants with a negative score, a score of exactly 0, and a positive score, for both measures respectively.}
+\end{figure*}
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+\centering
+\includegraphics{literature_search/PRISMA_2020_flow_diagram.pdf}
+\caption{\label{fig:prisma-flowchart}\emph{PRISMA flow diagram}. A flow diagram for the systematic literature review, based on the 2020 PRISMA template.}
+\end{figure*}
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+\centering
+\includegraphics{output/figures/funnel.pdf}
+\caption{\label{fig:funnel}\emph{Funnel plots for discernment and skepticism bias}. Dots represent effect sizes. In the absence of publication bias and heterogeneity, one would then expect to see the points forming a funnel shape, with the majority of the points falling inside of the pseudo-confidence region centered around the average effect estimate, with bounds of ±1.96 SE (the standard error value from the y-axis). The dashed red regression line illustrates the estimate of the Egger's regression test. For both outcomes, the slope differs significantly from zero, see Appendix \ref{publication-bias}.}
+\end{figure*}
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+\centering
+\includegraphics{output/figures/p-curve.pdf}
+\caption{\label{fig:p-curve}\emph{P-curves for discernment and skepticism bias}. The p-curve shows the percentage of effect sizes for a given p value within the range of 0.1 and 0.5. All values smaller than 0.01 are rounded to that value. The reference lines indicate the expected percentage of studies for a given p value, assuming that there is a true effect and certain statistical power to detect it (either 0\% or 30\% power). The observed p-curve is negatively sloped and heavily right skewed (the tail points to the right) for both outcomes, which suggests no widespread p-hacking.}
+\end{figure*}

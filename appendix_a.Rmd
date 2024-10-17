@@ -18,15 +18,13 @@ with $MD$ being the mean difference/change score (mean true news score minus mea
 
 The SMCC varies with the imputed correlation value $r$, because $SD_d$ varies as a function of $r$. If $r$ is greater than .5, $SD_d$ will be smaller than $SD_{false/true}$, and as a result, the SMCC will be larger than the estimate obtained by a standardized mean difference assuming independence such as Cohen's d. By contrast, when the correlation is less than .5, $SD_d$ will be greater than $SD_{false/true}$, and the SMCC will be smaller [@morris2002]. In our case, the imputated average correlation is `r average_correlation %>% round(digits = 2)`. 
 
-Table \@ref(tab:effects) shows that the SMCC yields slightly smaller effect sizes than the Cohen's d (because the correlation between true and false news is smaller than .5), but all conclusions remain the same. 
-
-In the next section, we show the results of sensitivity analyses for the imputed correlation value when calculating the SMCC.
+Table \@ref(tab:effect-comparison) shows that the SMCC yields slightly smaller effect sizes than the Cohen's d (because the correlation between true and false news is smaller than .5), but all conclusions remain the same. 
 
 ## Alternative effect sizes
 
-Table \@ref(tab:effects) shows compares different effect size estimators for both both discernment (H1) and skepticism  bias (H2). Besides Cohen's d, the estimator of the main study, and SMCC, the pre-registered estimator, we additionally included the estimates for two alternative estimators: A standardized mean difference assuming independence (SMD), precisely Hedge's g (a version of Cohen's d that corrects for small sample sizes), and a standardized mean change using raw (instead of change) score standardization (SMCR) [@becker1988]. When using raw score standardization, the standardized mean change expresses the effect size in terms of the standard deviation units of the pre-treatment (in our case false news) scores, rather than the standard deviation of the difference scores (involving the correlation) [@becker1988]. Among all estimators, the SMCC is the only one in which the effect size estimate depends on the value of the correlation between the false and true news scores. The interpretation of all these standardized effect measures is similar: all are expressed in terms of standard deviations. Yet, they are different estimators, because they rely on different standard deviations, thereby producing different estimates and standard errors [@morris2002]. Due to the low average correlation between false and true news ratings, the SMCC produces the smallest effect estimates for both discernment and skepticism  bias.
+Table \@ref(tab:effect-comparison) shows the meta-analytic averages for different effect size estimators for both both discernment (H1) and skepticism  bias (H2). Besides Cohen's d, the estimator of the main study, and SMCC, the pre-registered estimator, we additionally included the estimates for two alternative estimators: A standardized mean difference assuming independence (SMD), precisely Hedge's g (a version of Cohen's d that corrects for small sample sizes), and a standardized mean change using raw (instead of change) score standardization (SMCR) [@becker1988]. When using raw score standardization, the standardized mean change expresses the effect size in terms of the standard deviation units of the pre-treatment (in our case false news) scores, rather than the standard deviation of the difference scores (involving the correlation) [@becker1988]. Among all estimators, the SMCC is the only one in which the effect size estimate depends on the value of the correlation between the false and true news scores. The interpretation of all these standardized effect measures is similar: all are expressed in terms of standard deviations. Yet, they are different estimators, because they rely on different standard deviations, thereby producing different estimates and standard errors [@morris2002]. Due to the low average correlation between false and true news ratings, the SMCC produces the smallest effect estimates for both discernment and skepticism  bias.
 
-```{r effects, fig.pos='H'}
+```{r effect-comparison, fig.pos='H'}
 # main result table
 modelsummary::modelsummary(list("Discernment" = robust_model_accuracy, 
                                 "Skepticism  bias" = robust_model_error,
@@ -36,16 +34,20 @@ modelsummary::modelsummary(list("Discernment" = robust_model_accuracy,
                                 "Skepticism  bias" = SMCR_model_error,
                                 "Discernment" = SMD_model_accuracy, 
                                 "Skepticism  bias" = SMD_model_error),
-                           title = 'Model results', 
-                           stars = TRUE, 
-                           coef_rename = c("overall" = "Estimate")
-                           ) %>%
+                           title = 'Comparison of meta-analytic averages for different effect size estimators.', 
+                           #stars = TRUE, 
+                           coef_rename = c("overall" = "Estimate"), 
+                           estimate = "{estimate}",
+                           statistic = c("z = {statistic}",
+                                         "p = {p.value}"),
+                           output = "kableExtra"  # Ensure kableExtra is used
+) %>%
   add_header_above(c(" " = 1, "Cohen's d" = 2, "SMCC" = 2, "SMCR" = 2, "SMD" = 2)) %>%
   add_header_above(c(" " = 1, "Main estimator" = 2, "Preregistered estimator" = 2, "Alternative estimators" = 4),
                    line = FALSE, italic = TRUE) %>%
   # make smaller to fit
   kable_styling(latex_options = "scale_down") %>%
-  footnote(general = "Comparison of different effect sizes. Cohen's d is the estimator we report in the main analysis. SMCC (Standardized mean change using change score standardization) is the estimator we pre-registered. For reference, we provide the results we obtain when using a standardized mean difference assuming independence for all effect sizes (SMD), precisely Hedge's g, and a standardized change score using raw (instead of change) standardization (SMCR). For effects from studies that used a between participant design, we calculated Hedge's g in the results listed under \"SMCC\" and \"SMCR\"."
+  footnote(general = "Cohen's d is the estimator we report in the main analysis. SMCC (Standardized mean change using change score standardization) is the estimator we pre-registered. For reference, we provide the results we obtain when using a standardized mean difference assuming independence for all effect sizes (SMD), precisely Hedge's g, and a standardized change score using raw (instead of change) standardization (SMCR). For effects from studies that used a between participant design, we calculated Hedge's g in the results listed under \"SMCC\" and \"SMCR\". No adjustments have been made."
            , threeparttable = TRUE)
 ```
 
@@ -67,7 +69,8 @@ meta_wide %>% group_by(accuracy_scale) %>% summarise(Papers = n_distinct(paperID
   pivot_wider(names_from = accuracy_scale, 
               values_from = frequency) %>% 
   column_to_rownames(var = "variable") %>% 
-  apa_table(note = "Frequency table of scales.")
+  apa_table(
+    caption = "Frequency table of scales")
 ```
 
 ```{r, include=FALSE}
@@ -111,13 +114,17 @@ results <- list("Discernment" = accuracy_list,
 # by scale result table
 modelsummary::modelsummary(results,
                            title = '(Raw) Mean Differences between true and false news', 
-                           stars = TRUE, 
+                           #stars = TRUE, 
                            coef_rename = c("overall" = "Estimate"),
-                           shape = "rbind"
-                           ) %>%
+                           shape = "rbind",
+                           estimate = "{estimate}",
+                           statistic = c("z = {statistic}",
+                                         "p = {p.value}"),
+                           output = "kableExtra"  # Ensure kableExtra is used
+) %>%
   # make smaller to fit
   kable_styling(latex_options = "scale_down") %>%
-  footnote(general = "One scale, a 100-point scale, does not appear since there was only one effect size on that scale")
+  footnote(general = "Results of separate meta-analyses for different response scales. The effect sizes are not standardized, so that estimates are to be interpreted on their respective scale. One scale, a 100-point scale, does not appear since there was only one effect size using that scale. No adjustments have been made.", threeparttable = TRUE)
 
 ```
 
