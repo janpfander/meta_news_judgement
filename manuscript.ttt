@@ -1,5 +1,5 @@
 \begin{longtable}[t]{>{}r||>{\raggedright\arraybackslash}p{20em}|>{\raggedright\arraybackslash}p{7em}|>{\raggedleft\arraybackslash}p{5em}|>{\raggedleft\arraybackslash}p{5em}}
-\caption{\label{tab:unnamed-chunk-125}Articles included in the meta analysis}\\
+\caption{\label{tab:unnamed-chunk-127}Articles included in the meta analysis}\\
 \hline
 id & reference & country & Effect Sizes & Participants\\
 \hline
