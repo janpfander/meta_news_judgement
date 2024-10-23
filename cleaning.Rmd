@@ -124,6 +124,9 @@ d <- d %>%
                                            country == "Hong Kong" ~ "China", 
                                            country == "UK" ~ "United Kingdom",
                                            country == "Europe/United States" ~ "United States of America",
+                                           country == "Czech Republic" ~ "Czechia",
+                                           country == "Great Britain" ~ "United Kingdom",
+                                           country == "Serbia" ~ "Republic of Serbia",
                                            TRUE ~ country
                                            )
          )

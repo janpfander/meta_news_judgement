@@ -1354,10 +1354,14 @@ calculate_moderator_models <- function(data, list_report = FALSE) {
     ),
     
     accuracy_all <- robust(metafor::rma.mv(yi, vi, 
-                                           mods = ~country_grouped + political_concordance +
+                                           mods = ~country_grouped + 
+                                             political_concordance +
                                              news_family_grouped + 
-                                             news_format_grouped + news_source +
-                                             perfect_symetry,
+                                             news_format_grouped + 
+                                             news_source +
+                                             accuracy_scale_grouped +
+                                             perfect_symetry +
+                                             selection_fake_news_grouped,
                                            random = ~ 1 | unique_sample_id / 
                                              observation_id, data=data),
                            cluster = data$unique_sample_id

@@ -37,7 +37,8 @@ included <- read_csv("./data/cleaned.csv") %>%
 kbl(included, longtable = T, 
     #col.names = NULL, 
     caption = "Articles included in the meta analysis") %>%
-  kable_paper(full_width = F,) %>%
+  kable_paper(full_width = F) %>%
+  kableExtra::kable_styling(font_size = 8) %>%
   column_spec(1, bold = T, border_right = T) %>%
   column_spec(2, width = "20em") %>%
   column_spec(3, width = "7em") %>% 

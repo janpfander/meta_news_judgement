@@ -32,7 +32,7 @@ modelsummary::modelsummary(moderator_models_accuracy,
                            ) %>%
   # make smaller to fit
   kable_styling(latex_options = "scale_down") %>%
-  footnote(general = "Results of meta-regressions for different moderator variables. No adjustements have been made."
+  footnote(general = "Results of meta-regressions for different moderator variables. No adjustements have been made. Note that the last column for the model with all moderators does not display effect sizes for all moderator categories, because not all combinations of moderator categories are present in the data, case in which no effect size can be computed."
            , threeparttable = TRUE)
 ```
 
@@ -62,7 +62,7 @@ modelsummary::modelsummary(moderator_models_error,
                            ) %>%
   # make smaller to fit
   kable_styling(latex_options = "scale_down") %>%
-  footnote(general = "Results of meta-regressions for different moderator variables. No adjustements have been made."
+  footnote(general = "Results of meta-regressions for different moderator variables. No adjustements have been made. Note that the last column for the model with all moderators does not display effect sizes for all moderator categories, because not all combinations of moderator categories are present in the data, case in which no effect size can be computed."
            , threeparttable = TRUE)
 ```
 
@@ -109,7 +109,7 @@ The results suggest that imperfectly symmetrical scales may inflate discernment.
 
 #### Proportion of true news
 
-Most studies exposed participants to 50% of false news and 50% of true news, whereas outside of experimental settings, people on average are exposed to much more true news than false news [@altayQuantifyingInfodemicPeople2022]. This inflated proportion of false news may increase discernment or make participants more skeptical of true news. Empirical evidence suggests that the ratio of false news has no effect on discernment and slightly increases skepticism in news judgment [@altayExposureHigherRates2023]. Figure \@ref(fig:share-true) shows effect sizes for discernment and skepticism bias as a function of news ratio. Due to the very uneven number of effect sizes, it does not seem reasonable to run a meta-regression to test this. However, Fig. \@ref(fig:share-true) suggests no obvious trend with regard to the share of true news ratio. Besides, as for the other moderator variables, any observed association is likely to be confounded by other factors.
+Most studies exposed participants to 50% false and 50% true news, whereas outside of experimental settings, people on average are exposed to much more true news than false news [@altayQuantifyingInfodemicPeople2022]. This inflated proportion of false news may increase discernment or make participants more skeptical of true news. Experimental evidence suggests that the ratio of false news has no effect on discernment and slightly increases skepticism in news judgment [@altayExposureHigherRates2023]. Figure \@ref(fig:share-true) shows effect sizes for discernment and skepticism bias as a function of news ratio. Due to the very uneven number of effect sizes, it does not seem reasonable to run a meta-regression to test this. However, Fig. \@ref(fig:share-true) suggests no obvious trend with regard to the share of true news ratio. Besides, as for the other moderator variables, any observed association is likely to be confounded by other factors.
 
 (ref:share-true) *Effects of true-false ratio*. Effect sizes plotted by their share of true news among all news that an individual participant saw.
 
@@ -130,9 +130,37 @@ ggarrange(share_true_discernment,
 
 #### Selection of false news
 
-The majority of studies selected false news items from fact checking sites (e.g. Snopes). However, in three studies included in our meta-analysis, researchers automatically sampled news items and hired fact-checkers to establish their veracity, or did it themselves [@garrettConservativesSusceptibilityPolitical2021; @aslettOnlineSearchesEvaluate2024; @allenScalingFactcheckingUsing2021]. As shown in Tables \@ref(tab:moderators-discernment-table) we find no difference in discernment when comparing news fact checked by fact checking sites compared to news fact checked by researchers. We do find a difference regarding skepticism bias (see Table \@ref(tab:moderators-bias-table)), such that the news items fact checked by researchers show no skepticism bias. 
+The majority of studies selected false news items from fact checking sites (e.g. Snopes). However, in some studies, veracity of news items has been established by researchers (or fact-checkers hired by researchers). Table \@ref(tab:non-fact-check-sites-studies) lists these studies. 
 
-Note that, as with all between-study moderators, these estimates are likely confounded. The vast majority of effect sizes in the 'verified by researchers' category come from a single panel study [@garrettConservativesSusceptibilityPolitical2021]. This paper finds a negative skepticism bias for politically concordant news, suggesting that people are gullible towards information they politically approve. They did not find a skepticism bias for politically discordant items. Political concordance, therefore, is one reasonable candidate of a confounder for the observed difference regarding false news selection. However, as shown in Appendix \@ref(selection-bias), the (comparatively few) effect sizes from the other two studies relying on automated news selection also consistently yield a negative skepticism bias (i.e. gullibility bias). 
+```{r non-fact-check-sites-studies}
+studies <- meta_wide %>% 
+  filter(selection_fake_news_grouped == "identified by researchers") %>% 
+  distinct(ref, reference) %>% 
+  mutate(id = 1:nrow(.)) %>% 
+  select(id, reference) 
+
+# the kable version puts the table into appendix J. Use the apa_table() alternative
+# kbl(studies, longtable = T, 
+#     #col.names = NULL, 
+#     caption = "Studies that did not select false news items from fact-checking sites.") %>%
+#   kable_paper(full_width = F) %>%
+#   kableExtra::kable_styling(font_size = 8) %>%
+#   column_spec(1, bold = T, border_right = T) %>%
+#   column_spec(2, width = "35em") 
+
+
+papaja::apa_table(
+    studies, 
+    caption = "Studies that did not select false news items from fact-checking sites.",
+    col.names = c("", "Reference"),
+    align = c("l", "m{16cm}"),
+    font_size = "scriptsize"
+    )
+```
+
+Three of these studies reduced researcher selection bias by automatically sampling news items [@garrettConservativesSusceptibilityPolitical2021; @aslettOnlineSearchesEvaluate2024; @allenScalingFactcheckingUsing2021]. We discuss these studies in detail in Appendix \@ref(selection-bias). Here, we rely on the slightly broader definition of news items not taken from fact-checking websites. As shown in Tables \@ref(tab:moderators-discernment-table) we find no difference in discernment when comparing studies that relied on news from fact-checking sites, compared to studies in which researchers established veracity of news items. We do find a difference regarding skepticism bias (see Table \@ref(tab:moderators-bias-table)), such that studies relying on false news items as verified by the researchers show reduced (to almost 0) skepticism bias, compared to studies relying on false news items as verified by fact-checking organizations. 
+
+Note that, as with all between-study moderators, these estimates are likely confounded. The vast majority of effect sizes in the 'verified by researchers' category come from a single panel study [@garrettConservativesSusceptibilityPolitical2021]. This paper finds a negative skepticism bias for politically concordant news, suggesting that people are gullible towards information they politically approve. They did not find a skepticism bias for politically discordant items. Political concordance, therefore, is one reasonable candidate of a confounder for the observed difference regarding false news selection. However, as shown in Appendix \@ref(selection-bias), the (comparatively few) effect sizes from two other two studies relying on automated news selection also consistently yield a negative skepticism bias (i.e. gullibility bias). Automated news selection might therefor be a relevant factor, perhaps more important than merely not selecting news from fact-checked websites (as did the other studies in Table \@ref(tab:non-fact-check-sites-studies)). 
 
 ```{r}
 # Code to check results from the Garrett study
@@ -157,3 +185,4 @@ Note that, as with all between-study moderators, these estimates are likely conf
 # summary(Garrett_error_concordance)
 ```
 
+\FloatBarrier

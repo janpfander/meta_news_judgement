@@ -1,10 +1,10 @@
 # Effect sizes {#effect-sizes}
 
-## Preregistered analysis
+## Preregistered analyses
 
 \FloatBarrier
 
-In the main analysis that we report in the paper, we relied on Cohen's d as a standardized effect measure. However, we had pre-registered relying on standardized mean changes using change score standardization (SMCC) [@gibbons_estimation_1993] for within participant designs, and Hedge's g for the remaining `r descriptives$design$between$n` effect sizes from between participant designs [@hedges_distribution_1981].
+In the main analysis that we report in the paper, we relied on Cohen's d as a standardized effect measure. However, we had pre-registered relying on standardized mean changes using change score standardization (SMCC) [@gibbons_estimation_1993] for within participant designs, and Hedge's g for effect sizes from between participant designs [@hedges_distribution_1981].
 
 As Cohen's d, the SMCC expresses effects in units of (pooled) standard deviations, allowing for comparison across different scales. Also similar to the Cohen's d we calculated, the SMCC relies on a correlation estimate to account for statistical dependencies arising from the within participant design used by most studies. By contrast, the SMCC also uses this correlation coefficient in calculating the pooled standard deviation (and not only the standard error, as with our Cohen's d). As a result, the effect size estimate itself (and not only its certainty) are affected by the imputed correlation value. 
 
@@ -16,13 +16,13 @@ $$
 
 with $MD$ being the mean difference/change score (mean true news score minus mean false news score) and $SD_d$ being standard deviation of the difference/change scores, which (assuming equal standard deviations for false and true news) is calculated as: $SD_d = SD_{false/true}\sqrt{2(1-r)}$ [@morris2002].
 
-The SMCC varies with the imputed correlation value $r$, because $SD_d$ varies as a function of $r$. If $r$ is greater than .5, $SD_d$ will be smaller than $SD_{false/true}$, and as a result, the SMCC will be larger than the estimate obtained by a standardized mean difference assuming independence such as Cohen's d. By contrast, when the correlation is less than .5, $SD_d$ will be greater than $SD_{false/true}$, and the SMCC will be smaller [@morris2002]. In our case, the imputated average correlation is `r average_correlation %>% round(digits = 2)`. 
+The SMCC varies with the imputed correlation value $r$, because $SD_d$ varies as a function of $r$. If $r$ is greater than .5, $SD_d$ will be smaller than $SD_{false/true}$, and as a result, the SMCC will be larger than the estimate obtained by Cohen's d. By contrast, when the correlation is less than .5, $SD_d$ will be greater than $SD_{false/true}$, and the SMCC will be smaller than Cohen's d [@morris2002]. In our case, the imputed average correlation is `r average_correlation %>% round(digits = 2)`. 
 
 Table \@ref(tab:effect-comparison) shows that the SMCC yields slightly smaller effect sizes than the Cohen's d (because the correlation between true and false news is smaller than .5), but all conclusions remain the same. 
 
 ## Alternative effect sizes
 
-Table \@ref(tab:effect-comparison) shows the meta-analytic averages for different effect size estimators for both both discernment (H1) and skepticism  bias (H2). Besides Cohen's d, the estimator of the main study, and SMCC, the pre-registered estimator, we additionally included the estimates for two alternative estimators: A standardized mean difference assuming independence (SMD), precisely Hedge's g (a version of Cohen's d that corrects for small sample sizes), and a standardized mean change using raw (instead of change) score standardization (SMCR) [@becker1988]. When using raw score standardization, the standardized mean change expresses the effect size in terms of the standard deviation units of the pre-treatment (in our case false news) scores, rather than the standard deviation of the difference scores (involving the correlation) [@becker1988]. Among all estimators, the SMCC is the only one in which the effect size estimate depends on the value of the correlation between the false and true news scores. The interpretation of all these standardized effect measures is similar: all are expressed in terms of standard deviations. Yet, they are different estimators, because they rely on different standard deviations, thereby producing different estimates and standard errors [@morris2002]. Due to the low average correlation between false and true news ratings, the SMCC produces the smallest effect estimates for both discernment and skepticism  bias.
+Table \@ref(tab:effect-comparison) shows the meta-analytic averages for different effect size estimators for both discernment (H1) and skepticism  bias (H2). Besides Cohen's d, the estimator of the main study, and SMCC, the pre-registered estimator, we additionally included the estimates for two alternative estimators: A standardized mean difference assuming independence (SMD), precisely Hedge's g (a version of Cohen's d that corrects for small sample sizes), and a standardized mean change using raw (instead of change) score standardization (SMCR) [@becker1988]. When using raw score standardization, the standardized mean change expresses the effect size in terms of the standard deviation units of the pre-treatment (in our case false news) scores, rather than the standard deviation of the difference scores (involving the correlation) [@becker1988]. Among all estimators, the SMCC is the only one in which the effect size estimate depends on the value of the correlation between the false and true news scores. The interpretation of all these standardized effect measures is similar: all are expressed in terms of standard deviations. Yet, they are different estimators, because they rely on different standard deviations, thereby producing different estimates and standard errors [@morris2002]. Due to the low average correlation between false and true news ratings, the SMCC produces the smallest effect estimates for both discernment and skepticism  bias.
 
 ```{r effect-comparison, fig.pos='H'}
 # main result table
@@ -53,7 +53,7 @@ modelsummary::modelsummary(list("Discernment" = robust_model_accuracy,
 
 ## Effects on original scales
 
-Table \@ref(tab:scales) shows estimates by scale, in the original units of the scale. The table is intended to help interpret the magnitude of the effect sizes reported in the main findings. Note that some scales occur very rarely only (see Tab. \@ref(tab:n-scales)), hence making their meta-analytic estimates less meaningful.
+Table \@ref(tab:scales) shows estimates by scale, in the original units of the scale. The table is intended to help interpret the magnitude of the effect sizes reported in the main findings. Note that some scales occur very rarely only (see Tab. \@ref(tab:n-scales)).
 
 ```{r n-scales}
 meta_wide %>% group_by(accuracy_scale) %>% summarise(Papers = n_distinct(paperID),
@@ -70,7 +70,8 @@ meta_wide %>% group_by(accuracy_scale) %>% summarise(Papers = n_distinct(paperID
               values_from = frequency) %>% 
   column_to_rownames(var = "variable") %>% 
   apa_table(
-    caption = "Frequency table of scales")
+    caption = "Frequency table of scales.", 
+    note = "A 1-point scale means that values were standardized by the original authors to range from 0 to 1, but have originally been asked on Likert scales.")
 ```
 
 ```{r, include=FALSE}
@@ -124,7 +125,7 @@ modelsummary::modelsummary(results,
 ) %>%
   # make smaller to fit
   kable_styling(latex_options = "scale_down") %>%
-  footnote(general = "Results of separate meta-analyses for different response scales. The effect sizes are not standardized, so that estimates are to be interpreted on their respective scale. One scale, a 100-point scale, does not appear since there was only one effect size using that scale. No adjustments have been made.", threeparttable = TRUE)
+  footnote(general = "Results of separate meta-analyses for different response scales. The effect sizes are not standardized, so that estimates are to be interpreted on their respective scale. One scale, a 100-point scale, does not appear since there was only one effect size using that scale. A 1-point scale means that values were standardized by the original authors to range from 0 to 1, but have originally been asked on Likert scales. No adjustments have been made.", threeparttable = TRUE)
 
 ```
 

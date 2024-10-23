@@ -1,6 +1,6 @@
 # Individual level data {#individual-level}
 
-\FloatBarrier  
+\FloatBarrier
 
 ```{r individual-data, message=FALSE}
 # load data
@@ -40,7 +40,7 @@ The meta-model estimates are standardized. To be able to compare results, we sta
 
 We use the `lme4` package [@batesFittingLinearMixedEffects2015] and its `lmer()` function to run the mixed models. The mixed models include random effects by participant (each participant provides several ratings for both true and false news) and by sample for both the intercept and the effect of veracity. In our models, participants are nested in samples.
 
-As shown in Fig. \@ref(fig:individual-vs-meta), this individual-level analysis yields an estimate very similar to our meta-analytic average. 
+As shown in Fig. \@ref(fig:individual-vs-meta), this individual-level analysis yields an estimate very similar to our meta-analytic average.
 
 ```{r reduce-data}
 # These steps are to identify those studies that we have raw data on in the 
@@ -190,7 +190,7 @@ reduced_error <- robust(metafor::rma.mv(yi, vi,
          outcome = "error")
 ```
 
-(ref:individual-vs-meta) Comparison of meta to individual level analysis (continuous scales only). "Meta" corresponds to the main results reported in the main article, run on all n = `r descriptives$effects` effect sizes; "meta reduced" are the same meta-analytic models as in the main analysis but run on the subset of `r individual_level_continuous$n_papers` articles ($N_{Participants}$ = `r individual_level_continuous$n_subjects`, $N_{Observations}$ = `r individual_level_continuous$n_observations`; making for `r nrow(reduced_accuracy_effect)` effect sizes) for which we have individual level data; "individual-level" corresponds to the result of mixed effect models run on the same subset of individual-level data. Symbols represent model estimates, horizontal bars 95% confidence intervals. 
+(ref:individual-vs-meta) Comparison of meta to individual level analysis (continuous scales only). "Meta" corresponds to the main results reported in the main article, run on all n = `r descriptives$effects` effect sizes; "meta reduced" are the same meta-analytic models as in the main analysis but run on the subset of `r individual_level_continuous$n_papers` articles ($N_{Participants}$ = `r individual_level_continuous$n_subjects`, $N_{Observations}$ = `r individual_level_continuous$n_observations`; making for `r nrow(reduced_accuracy_effect)` effect sizes) for which we have individual level data; "individual-level" corresponds to the result of mixed effect models run on the same subset of individual-level data. Symbols represent model estimates, horizontal bars 95% confidence intervals.
 
 ```{r individual-vs-meta, fig.cap="(ref:individual-vs-meta)"}
 # We store the results of all analyses in a single data frame
@@ -242,11 +242,11 @@ ggplot(comparison,
 
 ## How skilled were individual participants?
 
-In our meta analysis, we find that people discern well between true and false news - on average. But how skilled are individual participants? 
+In our meta analysis, we find that people discern well between true and false news--on average. But how skilled are individual participants?
 
-There are two ways to go about this: (i) How good were individual participants in discerning true from false?, and (ii) How good were individual participants in correctly judging the veracity of news? 
+There are two ways to go about this: (i) How good were individual participants in discerning true from false?, and (ii) How good were individual participants in correctly judging the veracity of news?
 
-As for the former, we have provided an answer in the main analysis (see Fig. \@ref(fig:individual-level-plot)). Here, we report the absolute number of individuals with a positive vs. negative discernment and skepticism  bias score in Table \@ref(tab:individuals-direction).
+As for the former, we have provided an answer in the main analysis (see Fig. \@ref(fig:individual-level-plot)). Here, we report the absolute number of individuals with a positive vs. negative discernment and skepticism bias score in Table \@ref(tab:individuals-direction).
 
 ```{r individuals-direction}
 # load data
@@ -325,10 +325,10 @@ table <- data %>%
   column_to_rownames(var = "value") 
 
 table %>% 
-  apa_table(note = "Frequency table of total number of participants that had a positive or negative score for both outcomes.")
+  apa_table(note = "Frequency table of total number of participants that had a positive or negative score for both outcomes. Values in brackets indicate the share of participants for the respective outcome (i.e. column).")
 ```
 
-To answer the latter question, 'How good were individual participants in correctly judging the veracity of news?', we collapsed all likert scales into binary ones. For example, on a 4-point scale, we coded responses of 1 and 2 as not accurate (0) and 3 and 4 as accurate (1). For scales, with a mid-point (example 3 on a 5-point scale), we coded midpoint answers as NA. For each participant, we then identified the instances in which individuals classify news judgments correctly (i.e. false news as false and true news as true), and calculate the share of correct judgments among all judgments. For example, a participant rating one true news item as true and one fake news item as true has a share of correct judgments of 50%. Fig. \@ref(fig:collapsed-individual-correct) shows the cumulative percentage of participants for different shares of correct judgments.   
+To answer the latter question, 'How good were individual participants in correctly judging the veracity of news?', we collapsed all likert scales into binary ones. For example, on a 4-point scale, we coded responses of 1 and 2 as not accurate (0) and 3 and 4 as accurate (1). For scales, with a mid-point (example 3 on a 5-point scale), we coded midpoint answers as NA. For each participant, we then identified the instances in which individuals classify news judgments correctly (i.e. false news as false and true news as true), and calculate the share of correct judgments among all judgments. For example, a participant rating one true news item as true and one fake news item as true has a share of correct judgments of 50%. Fig. \@ref(fig:collapsed-individual-correct) shows the cumulative percentage of participants for different shares of correct judgments.
 
 ```{r collapsed-individual-data-correct, message=FALSE}
 # load individual level data
@@ -408,7 +408,7 @@ group_by(highlight) %>%
          )
 ```
 
-Only `r highlight_data$label[1]` % of participants were at chance or worse in judging the veracity of news items. The better 50% of participants were correct at least `r highlight_data$share_correct[2]*100` % of the time in their news judgments. 
+Only `r highlight_data$label[1]` % of participants were at chance or worse in judging the veracity of news items. The better 50% of participants were correct at least `r highlight_data$share_correct[2]*100` % of the time in their news judgments.
 
 (ref:collapsed-individual-correct) Cumulative distribution of participants as a function of the quality of their news judgments (i.e. the share of correct judgments among all judgments for each participant). To read the graph, pick a share of correct judgments on the X-axis, go vertically to the curve, from the curve go horizontally to the y-axis and read the share of participants who performed exactly this well or worse.
 
@@ -441,7 +441,7 @@ ggplot(individual_level_subset, aes(x = share_correct, y = cumulative_percentage
   plot_theme
 ```
 
-Note that before, we found that only `r individual_level_valence$Discernment$negative$label` of people had a negative discernment score. How is that compatible with `r highlight_data$label[1]` % of people performing worse than chance? 
+Note that before, we found that only `r individual_level_valence$Discernment$negative$label` of people had a negative discernment score. How is that compatible with `r highlight_data$label[1]` % of people performing at chance or worse?
 
 ```{r compare-individual-measures}
 table <- left_join(individual_level_subset, outcomes_by_participant) %>% 
@@ -475,9 +475,9 @@ table %>%
 #                values_to = "value")
 ```
 
-That is because discernment and performing better than chance are distinct measurements. For example, people can be overall correct more than half of the time, but do worse for true news than for fake news. As shown in table \@ref(tab:compare-individual-measures), there are `r table$n_subjects[2]` participants performing at chance or worse, but have a positive discernment score nevertheless (compared to only `r table$n_subjects[1]` participants with a negative discernment score who performed better than chance).
+That is because discernment and performing better than chance are distinct measurements. For example, people can be overall correct more than half of the time, but do considerably worse for true news than for fake news, yielding a negative discernment score. As shown in table \@ref(tab:compare-individual-measures), there are `r table$n_subjects[2]` participants performing at chance or worse, but have a positive discernment score nevertheless (compared to only `r table$n_subjects[1]` participants with a negative discernment score who performed better than chance).
 
-For a precise example, see Table \@ref(tab:single-participant-example). The participant correctly identified the veracity of 8 out of 14 news items. However, the participant performed better for fake news (7 out of 9 correct) then for true news (1 out of 5 correct), yielding a negative discernment score.
+For a precise example taken from @sultanTimePressureReduces2022a, see Table \@ref(tab:single-participant-example). The participant correctly identified the veracity of 8 out of 14 news items, i.e. performed better than chance. However, the participant rated only one true news item of five (correctly) as accurate. At the same time, the participant made two mistakes and classified two out of nine false news items as accurate. On average, the participant rated true news as less accurate ($1/5 = 18/90$) than false news ($2/9 = 20/90$), yielding a negative discernment score.
 
 ```{r single-participant-example}
 # load data
@@ -503,4 +503,3 @@ individual_level_subset %>%
   round_numbers %>% 
   apa_table(note = "Example of a single participant who rated news items on a binary scale and obtained a negative discernment score while performing better than chance.")
 ```
-
