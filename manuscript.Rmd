@@ -109,7 +109,7 @@ figurelist        : yes
 tablelist         : yes
 footnotelist      : no
 
-classoption       : "man"
+classoption       : "man" # doc for fancy version, otherwise man
 output            : papaja::apa6_pdf # "_doc" for word; however, note that some of the features of kableExtra are not available for word and will yield errors. For example to knit to word, you'll have to comment out all "add_header_above()" functions for model output tables
 
 always_allow_html: true
