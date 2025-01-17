@@ -8,7 +8,8 @@
 # knitr and caching stuff
 *_files
 *output
-/*data*
+data_from_papers/
+data_from_simulation/
 
 # file types
 *.docx
@@ -21,9 +22,6 @@
 
 # add "simulation" scripts
 !*.Rmd
-
-# remove non-anonymized files
-Pfander*
 
 # remove
 /no_git
